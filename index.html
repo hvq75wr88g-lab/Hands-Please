@@ -256,7 +256,7 @@
             display: inline-block;
         }
 
-        /* Modal */
+        /* Detail modal */
 
         .modal {
             display: none;
@@ -397,7 +397,7 @@
             font-size: 0.95rem;
         }
 
-        /* Admin panel */
+        /* Admin banner and floating controls */
 
         .admin-banner {
             display: none;
@@ -524,7 +524,8 @@
         .form-group input[type="text"],
         .form-group input[type="number"],
         .form-group textarea,
-        .form-group select {
+        .form-group select,
+        .form-group input[type="file"] {
             width: 100%;
             padding: 0.5rem 0.55rem;
             font-size: 0.85rem;
@@ -711,7 +712,7 @@
         <div id="contentGrid" class="menu-grid"></div>
     </div>
 
-    <!-- Detail modal (view mode) -->
+    <!-- Detail modal -->
     <div class="modal" id="detailModal">
         <div class="modal-content">
             <button class="modal-close" onclick="closeDetailModal()">&times;</button>
@@ -719,7 +720,7 @@
         </div>
     </div>
 
-    <!-- Editor modal (add / edit) -->
+    <!-- Editor modal -->
     <div class="editor-modal" id="editorModal">
         <div class="editor-content">
             <div class="editor-header">
@@ -948,7 +949,7 @@
         }
 
         function saveData() {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(appData)); // [web:157][web:148][web:162]
         }
 
         // ========================================
@@ -985,12 +986,10 @@
             const grid = document.getElementById("contentGrid");
             let items = appData[currentTab] || [];
 
-            // Filter by dietaries for food
             if (currentTab === "food" && foodFilter !== "all") {
                 items = items.filter(d => Array.isArray(d.dietaries) && d.dietaries.includes(foodFilter));
             }
 
-            // Search across appropriate fields
             if (searchTerm) {
                 items = items.filter(item => matchesSearch(item, currentTab, searchTerm));
             }
@@ -1270,7 +1269,7 @@
                 logoutAdmin();
             } else {
                 const pwd = prompt("Enter admin password:");
-                if (pwd === "admin2026") {
+                if (pwd === "Iworkfortips") {
                     isAdmin = true;
                     document.body.classList.add("admin-mode");
                     renderGrid();
@@ -1307,7 +1306,7 @@
 
         let editorState = {
             tab: "food",
-            index: null // null = new
+            index: null
         };
 
         function openEditor(tab, index) {
@@ -1407,9 +1406,10 @@
                         <input type="text" id="foodName" value="${escapeHtml(item.name || "")}">
                     </div>
                     <div class="form-group">
-                        <label>Image URL</label>
-                        <input type="text" id="foodImage" value="${escapeHtml(item.image || "")}">
-                        <div class="small-hint">Can be left blank. A placeholder will be shown.</div>
+                        <label>Image</label>
+                        <input type="text" id="foodImage" value="${escapeHtml(item.image || "")}" placeholder="Paste image URL or use Upload below">
+                        <input type="file" id="foodImageFile" accept="image/*" style="margin-top:0.35rem;" onchange="handleFoodImageUpload(event)">
+                        <div class="small-hint">You can paste an image URL or upload from this device. Uploaded images are saved only in this browser as data URLs.</div>
                     </div>
                     <div class="form-group">
                         <label>Dietaries (tags shown on cards)</label>
@@ -1469,6 +1469,24 @@
             renderListEditor(mepList, item.miseEnPlace || [""]);
             renderListEditor(ingList, item.ingredients || [""]);
             renderModEditor(modList, item.modifications || []);
+        }
+
+        function handleFoodImageUpload(event) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+            if (!file.type.startsWith("image/")) {
+                alert("Please select an image file.");
+                return;
+            }
+            const reader = new FileReader(); // [web:152][web:153][web:158]
+            reader.onload = function(e) {
+                const dataUrl = e.target.result;
+                const imageInput = document.getElementById("foodImage");
+                if (imageInput) {
+                    imageInput.value = dataUrl;
+                }
+            };
+            reader.readAsDataURL(file);
         }
 
         function saveFoodItem() {
@@ -1546,7 +1564,7 @@
         }
 
         function initWineEditor(item) {
-            // nothing special to initialise
+            // no special init
         }
 
         function saveWineItem() {
@@ -1708,7 +1726,7 @@
         }
 
         function initBeerEditor(item) {
-            // nothing special
+            // no special init
         }
 
         function saveBeerItem() {
