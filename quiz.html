@@ -1668,7 +1668,8 @@ async function sbSaveQuestions(questionsArr){
         });
       }
       
-      localStorage.setItem('handsPlease_quiz_v5', JSON.stringify(questions));
+      localStorage.setItem('handsPlease_quiz_v5', JSON.stringify(questions)); // optional local cache
+sbSaveQuestions(questions).catch(err => console.warn("Supabase save questions failed:", err));
       
       cancelEdit();
       refreshQuestionsList();
@@ -1684,18 +1685,28 @@ async function sbSaveQuestions(questionsArr){
       if(!confirm('Delete this question?')) return;
       
       questions = questions.filter(q => q.id !== editingId);
-      localStorage.setItem('handsPlease_quiz_v5', JSON.stringify(questions));
+      localStorage.setItem('handsPlease_quiz_v5', JSON.stringify(questions)); // optional local cache
+sbSaveQuestions(questions).catch(err => console.warn("Supabase save questions failed:", err));
+
       
       cancelEdit();
       refreshQuestionsList();
     }
 
-    function resetToDefaults(){
-      if(!confirm('Reset to default questions? This will delete all custom questions.')) return;
-      
-      localStorage.removeItem('handsPlease_quiz_v5');
-      location.reload();
-    }
+    async function resetToDefaults(){
+  if(!confirm('Reset to default questions? This will delete all custom questions.')) return;
+
+  questions = [...DEFAULT_BANK];
+  localStorage.setItem('handsPlease_quiz_v5', JSON.stringify(questions)); // optional local cache
+
+  try{
+    await sbSaveQuestions(questions);
+  } catch(err){
+    console.warn("Supabase reset questions failed:", err);
+  }
+
+  location.reload();
+}
 
     function exportQuestions(){
       const json = JSON.stringify(questions, null, 2);
@@ -1726,7 +1737,8 @@ async function sbSaveQuestions(questionsArr){
             }
             
             questions = imported;
-            localStorage.setItem('handsPlease_quiz_v5', JSON.stringify(questions));
+          localStorage.setItem('handsPlease_quiz_v5', JSON.stringify(questions)); // optional local cache
+sbSaveQuestions(questions).catch(err => console.warn("Supabase save questions failed:", err));
             refreshQuestionsList();
             alert('Import successful!');
           } catch(err){
