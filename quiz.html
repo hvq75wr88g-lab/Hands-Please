@@ -133,20 +133,22 @@
       flex: 1;
       position: relative;
       display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-end;
+      flex-direction: row;
+      align-items: flex-end;
+      justify-content: space-between;
+      padding: 0 20px 20px;
       overflow: hidden;
       background: linear-gradient(to bottom, transparent, rgba(255,255,255,0.3));
     }
 
-    /* Eggs HUD */
+    /* Eggs HUD - LEFT SIDE */
     .eggsHUD{
-      position: absolute;
-      top: 20px;
       display: flex;
+      flex-direction: column;
       gap: 20px;
       z-index: 20;
+      align-items: center;
+      margin-bottom: 40px;
     }
 
     .egg{
@@ -171,6 +173,7 @@
       transform: rotate(-30deg);
     }
 
+    /* REALISTIC CRACK PATTERN */
     .egg.cracked{
       background: #e8e8e8;
       border-color: #999;
@@ -181,26 +184,35 @@
       content: '';
       position: absolute;
       inset: 0;
-      background: 
-        linear-gradient(45deg, transparent 48%, #555 49%, #555 51%, transparent 52%),
-        linear-gradient(-60deg, transparent 48%, #555 49%, #555 51%, transparent 52%);
+      background-image:
+        /* Main vertical crack */
+        linear-gradient(92deg, transparent 49%, #555 49.5%, #555 50.5%, transparent 51%),
+        /* Branch crack top-left */
+        linear-gradient(125deg, transparent 45%, #666 45.5%, #666 46%, transparent 46.5%),
+        /* Branch crack bottom-right */
+        linear-gradient(65deg, transparent 54%, #666 54.5%, #666 55%, transparent 55.5%),
+        /* Small crack detail */
+        linear-gradient(110deg, transparent 48%, #777 48.5%, #777 49%, transparent 49.5%),
+        /* Horizontal micro-crack */
+        linear-gradient(180deg, transparent 52%, #888 52.3%, #888 52.7%, transparent 53%);
       border-radius: inherit;
+      opacity: 0.8;
     }
 
-    /* Chicken Stage */
+    /* Chicken Stage - RIGHT SIDE */
     .chickenStage{
-      width: 100%;
-      height: 100%;
+      flex: 1;
       display: flex;
       align-items: flex-end;
       justify-content: center;
       position: relative;
+      max-width: 500px;
     }
 
     .chickenSVG{
-      width: 90%;
-      max-width: 500px;
-      height: 90%;
+      width: 100%;
+      height: 100%;
+      max-height: 90%;
       display: none;
       filter: drop-shadow(0 15px 20px rgba(0,0,0,0.15));
     }
@@ -293,41 +305,196 @@
 
     .adminLink:hover{ color: var(--accent); }
 
-    /* Admin Modal */
+    /* Admin Modal - FULL EDITOR */
     .adminModal{
       position: fixed;
       inset: 0;
-      background: rgba(0,0,0,0.8);
+      background: rgba(0,0,0,0.85);
       display: none;
       align-items: center;
       justify-content: center;
       z-index: 300;
+      overflow-y: auto;
+      padding: 20px;
     }
 
-    .adminBox{
+    .adminPanel{
       background: white;
-      padding: 30px;
       border-radius: 16px;
-      width: 90%;
-      max-width: 400px;
-      text-align: center;
-    }
-
-    .adminBox h3{ margin-bottom: 20px; color: var(--accent); }
-
-    .adminBox button{
-      display: block;
       width: 100%;
-      padding: 14px;
-      margin: 10px 0;
-      border: none;
-      background: #ecf0f1;
-      border-radius: 10px;
-      font-size: 16px;
-      cursor: pointer;
+      max-width: 700px;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
     }
 
-    .adminBox button:hover{ background: #d5dbdb; }
+    .adminHeader{
+      padding: 20px;
+      border-bottom: 2px solid #ecf0f1;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .adminHeader h2{
+      color: var(--accent);
+      font-size: 24px;
+    }
+
+    .adminBody{
+      padding: 20px;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .adminControls{
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .btnAdmin{
+      padding: 12px 20px;
+      border: none;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .btnPrimary{ background: var(--accent); color: white; }
+    .btnPrimary:hover{ background: #e67e22; }
+    .btnSecondary{ background: #ecf0f1; color: var(--ink); }
+    .btnSecondary:hover{ background: #d5dbdb; }
+    .btnDanger{ background: var(--danger); color: white; }
+    .btnDanger:hover{ background: #a93226; }
+
+    .questionsList{
+      display: grid;
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .qCard{
+      border: 2px solid #ecf0f1;
+      border-radius: 12px;
+      padding: 15px;
+      background: #fafafa;
+    }
+
+    .qCard .qText{
+      font-weight: bold;
+      margin-bottom: 10px;
+      font-size: 16px;
+      color: var(--ink);
+    }
+
+    .qCard .qChoices{
+      font-size: 14px;
+      color: #555;
+      margin-bottom: 10px;
+      padding-left: 10px;
+    }
+
+    .qCard .qChoices div{
+      margin: 5px 0;
+    }
+
+    .qCard .qChoices .correct{
+      color: var(--ok);
+      font-weight: bold;
+    }
+
+    .qCard .qActions{
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    /* Editor Form */
+    .editorForm{
+      display: none;
+      background: white;
+      border: 2px solid var(--accent);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    .editorForm.active{ display: block; }
+
+    .formField{
+      margin-bottom: 15px;
+    }
+
+    .formField label{
+      display: block;
+      font-weight: 600;
+      margin-bottom: 5px;
+      font-size: 14px;
+      color: var(--ink);
+    }
+
+    .formField input[type="text"],
+    .formField textarea{
+      width: 100%;
+      padding: 10px;
+      border: 2px solid #ecf0f1;
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: inherit;
+    }
+
+    .formField input:focus,
+    .formField textarea:focus{
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .formField textarea{ min-height: 80px; resize: vertical; }
+
+    .choiceEditor{
+      display: grid;
+      gap: 10px;
+    }
+
+    .choiceRow{
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .choiceRow input[type="text"]{
+      flex: 1;
+      padding: 10px;
+      border: 2px solid #ecf0f1;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+
+    .choiceRow input[type="radio"]{
+      width: 20px;
+      height: 20px;
+      accent-color: var(--ok);
+    }
+
+    .choiceRow button{
+      padding: 8px 12px;
+      background: var(--danger);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    .formActions{
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
+    }
 
   </style>
 </head>
@@ -354,17 +521,17 @@
     </div>
   </div>
 
-  <!-- BOTTOM HALF -->
+  <!-- BOTTOM HALF - Split Layout -->
   <div class="bottomHalf">
     
-    <!-- Eggs -->
+    <!-- LEFT: Eggs -->
     <div class="eggsHUD">
       <div class="egg" id="egg1"></div>
       <div class="egg" id="egg2"></div>
       <div class="egg" id="egg3"></div>
     </div>
 
-    <!-- Chicken Stage -->
+    <!-- RIGHT: Chicken Stage -->
     <div class="chickenStage">
       
       <!-- HAPPY (White, Wings Up) -->
@@ -420,27 +587,67 @@
 
   <a href="#" class="adminLink" onclick="event.preventDefault(); openAdmin();">Admin</a>
 
-  <!-- Admin Modal -->
+  <!-- Admin Modal with FULL EDITOR -->
   <div class="adminModal" id="adminModal">
-    <div class="adminBox">
-      <h3>Admin Panel</h3>
-      <button onclick="resetToDefaults()">Reset to Default Questions</button>
-      <button onclick="closeAdmin()">Close</button>
+    <div class="adminPanel">
+      
+      <div class="adminHeader">
+        <h2>Question Bank Editor</h2>
+        <button class="btnSecondary" onclick="closeAdmin()">Close</button>
+      </div>
+
+      <div class="adminBody">
+        
+        <div class="adminControls">
+          <button class="btnPrimary" onclick="showAddForm()">➕ Add New Question</button>
+          <button class="btnSecondary" onclick="resetToDefaults()">Reset to Defaults</button>
+          <button class="btnSecondary" onclick="exportQuestions()">Export JSON</button>
+          <button class="btnSecondary" onclick="importQuestions()">Import JSON</button>
+        </div>
+
+        <!-- Editor Form (Hidden by default) -->
+        <div class="editorForm" id="editorForm">
+          <h3 style="margin-bottom:15px; color:var(--accent);">Edit Question</h3>
+          
+          <div class="formField">
+            <label>Question Text:</label>
+            <textarea id="editQuestionText" placeholder="Enter your question..."></textarea>
+          </div>
+
+          <div class="formField">
+            <label>Answer Choices (check the correct one):</label>
+            <div class="choiceEditor" id="choiceEditor">
+              <!-- Dynamic choice rows -->
+            </div>
+            <button class="btnSecondary" onclick="addChoiceRow()" style="margin-top:10px; padding:8px 12px; font-size:13px;">+ Add Choice</button>
+          </div>
+
+          <div class="formActions">
+            <button class="btnPrimary" onclick="saveQuestion()">Save Question</button>
+            <button class="btnSecondary" onclick="cancelEdit()">Cancel</button>
+            <button class="btnDanger" onclick="deleteCurrentQuestion()" id="deleteBtn" style="display:none;">Delete Question</button>
+          </div>
+        </div>
+
+        <!-- Questions List -->
+        <div class="questionsList" id="questionsList"></div>
+
+      </div>
     </div>
   </div>
 
   <script>
     // === DATA ===
     const DEFAULT_BANK = [
-      { q: "Describe Loop juices to a guest:", c: ["Imperfect produce, cold pressed, circular economy", "Fresh squeezed daily in-house", "Concentrate from cartons"], a: 0 },
-      { q: "Is the Farmhouse Breakfast gluten free?", c: ["Yes, it's naturally gluten free", "No - potatoes cooked in shared fryer (cross-contamination)", "Only if you remove the eggs"], a: 1 },
-      { q: "What can VEGAN guests eat?", c: ["Farmhouse Breakfast (no eggs)", "Vegan Mexican Scramble or Fruit Plate", "Eggs Benedict (hold hollandaise)"], a: 1 },
-      { q: "What's in the Power Bowl?", c: ["Oatmeal with brown sugar", "Greek yogurt, berries, granola, smoothie, fresh fruit", "Acai blend with granola"], a: 1 },
-      { q: "Components of Avocado Toast:", c: ["Sourdough, smashed avo, poached eggs, radish, pickled onion, feta", "Rye bread, fried egg, bacon", "Gluten free toast, plain avocado"], a: 0 },
-      { q: "Is the Oatmeal gluten free?", c: ["Yes, certified gluten free", "Cooked in water but NOT celiac-safe (trace risk)", "Only if ordered plain"], a: 1 },
-      { q: "Belgian Waffle comes with:", c: ["Just butter and syrup", "Fresh berries, maple whipped cream, salted caramel, icing sugar", "Chocolate sauce and banana"], a: 1 },
-      { q: "Dairy-free options:", c: ["Pancakes with butter", "Fruit Plate, Vegan Scramble, Oatmeal (water-cooked)", "Yogurt Bowl"], a: 1 },
-      { q: "Can Celiac guests have potatoes/fries?", c: ["Yes, totally safe", "No - cooked in shared fryer with gluten items", "Only baked potatoes"], a: 1 }
+      { id: '1', q: "Describe Loop juices to a guest:", c: ["Imperfect produce, cold pressed, circular economy", "Fresh squeezed daily in-house", "Concentrate from cartons"], a: 0 },
+      { id: '2', q: "Is the Farmhouse Breakfast gluten free?", c: ["Yes, it's naturally gluten free", "No - potatoes cooked in shared fryer (cross-contamination)", "Only if you remove the eggs"], a: 1 },
+      { id: '3', q: "What can VEGAN guests eat?", c: ["Farmhouse Breakfast (no eggs)", "Vegan Mexican Scramble or Fruit Plate", "Eggs Benedict (hold hollandaise)"], a: 1 },
+      { id: '4', q: "What's in the Power Bowl?", c: ["Oatmeal with brown sugar", "Greek yogurt, berries, granola, smoothie, fresh fruit", "Acai blend with granola"], a: 1 },
+      { id: '5', q: "Components of Avocado Toast:", c: ["Sourdough, smashed avo, poached eggs, radish, pickled onion, feta", "Rye bread, fried egg, bacon", "Gluten free toast, plain avocado"], a: 0 },
+      { id: '6', q: "Is the Oatmeal gluten free?", c: ["Yes, certified gluten free", "Cooked in water but NOT celiac-safe (trace risk)", "Only if ordered plain"], a: 1 },
+      { id: '7', q: "Belgian Waffle comes with:", c: ["Just butter and syrup", "Fresh berries, maple whipped cream, salted caramel, icing sugar", "Chocolate sauce and banana"], a: 1 },
+      { id: '8', q: "Dairy-free options:", c: ["Pancakes with butter", "Fruit Plate, Vegan Scramble, Oatmeal (water-cooked)", "Yogurt Bowl"], a: 1 },
+      { id: '9', q: "Can Celiac guests have potatoes/fries?", c: ["Yes, totally safe", "No - cooked in shared fryer with gluten items", "Only baked potatoes"], a: 1 }
     ];
 
     // === STATE ===
@@ -449,11 +656,17 @@
     let score = 0;
     let strikes = 0;
     let gameOver = false;
+    let editingId = null;
 
     // === INIT ===
     function init(){
-      const stored = localStorage.getItem('handsPlease_quiz_v4');
+      const stored = localStorage.getItem('handsPlease_quiz_v5');
       questions = stored ? JSON.parse(stored) : [...DEFAULT_BANK];
+      
+      // Ensure IDs exist
+      questions.forEach((q, i) => {
+        if(!q.id) q.id = 'q' + Date.now() + i;
+      });
       
       // Shuffle slightly
       questions.sort(() => Math.random() - 0.5);
@@ -471,7 +684,7 @@
       renderQuestion();
     }
 
-    // === RENDER ===
+    // === RENDER QUIZ ===
     function renderQuestion(){
       if(currentIdx >= questions.length){
         finishQuiz(true);
@@ -572,6 +785,7 @@
       const pw = prompt('Enter admin password:');
       if(pw === 'Iworkfortips'){
         document.getElementById('adminModal').style.display = 'flex';
+        renderQuestionsList();
       } else if(pw !== null){
         alert('Incorrect password');
       }
@@ -579,12 +793,214 @@
 
     function closeAdmin(){
       document.getElementById('adminModal').style.display = 'none';
+      cancelEdit();
+    }
+
+    function renderQuestionsList(){
+      const list = document.getElementById('questionsList');
+      list.innerHTML = '';
+
+      // Reload from storage
+      const stored = localStorage.getItem('handsPlease_quiz_v5');
+      const bank = stored ? JSON.parse(stored) : [...DEFAULT_BANK];
+
+      bank.forEach((q, idx) => {
+        const card = document.createElement('div');
+        card.className = 'qCard';
+        
+        let choicesHTML = '';
+        q.c.forEach((choice, i) => {
+          const cls = i === q.a ? 'correct' : '';
+          const mark = i === q.a ? '✓' : '';
+          choicesHTML += `<div class="${cls}">${i+1}. ${choice} ${mark}</div>`;
+        });
+
+        card.innerHTML = `
+          <div class="qText">${idx+1}. ${q.q}</div>
+          <div class="qChoices">${choicesHTML}</div>
+          <div class="qActions">
+            <button class="btnSecondary" onclick="editQuestion('${q.id}')">Edit</button>
+            <button class="btnDanger" onclick="deleteQuestion('${q.id}')">Delete</button>
+          </div>
+        `;
+        
+        list.appendChild(card);
+      });
+    }
+
+    function showAddForm(){
+      editingId = null;
+      document.getElementById('deleteBtn').style.display = 'none';
+      document.getElementById('editQuestionText').value = '';
+      document.getElementById('choiceEditor').innerHTML = '';
+      
+      // Add 3 blank choices
+      for(let i = 0; i < 3; i++){
+        addChoiceRow();
+      }
+
+      document.getElementById('editorForm').classList.add('active');
+    }
+
+    function addChoiceRow(){
+      const editor = document.getElementById('choiceEditor');
+      const idx = editor.children.length;
+      
+      const row = document.createElement('div');
+      row.className = 'choiceRow';
+      row.innerHTML = `
+        <input type="radio" name="correctChoice" value="${idx}" ${idx === 0 ? 'checked' : ''}>
+        <input type="text" placeholder="Choice ${idx + 1}" data-choice-idx="${idx}">
+        <button onclick="removeChoiceRow(this)">✕</button>
+      `;
+      
+      editor.appendChild(row);
+    }
+
+    function removeChoiceRow(btn){
+      const row = btn.parentElement;
+      if(document.getElementById('choiceEditor').children.length > 2){
+        row.remove();
+        // Re-index
+        document.querySelectorAll('[data-choice-idx]').forEach((input, i) => {
+          input.setAttribute('data-choice-idx', i);
+          input.previousElementSibling.value = i;
+        });
+      } else {
+        alert('Must have at least 2 choices');
+      }
+    }
+
+    function editQuestion(id){
+      const stored = localStorage.getItem('handsPlease_quiz_v5');
+      const bank = stored ? JSON.parse(stored) : [...DEFAULT_BANK];
+      const q = bank.find(x => x.id === id);
+      
+      if(!q) return;
+
+      editingId = id;
+      document.getElementById('deleteBtn').style.display = 'inline-block';
+      document.getElementById('editQuestionText').value = q.q;
+      
+      const editor = document.getElementById('choiceEditor');
+      editor.innerHTML = '';
+      
+      q.c.forEach((choice, i) => {
+        const row = document.createElement('div');
+        row.className = 'choiceRow';
+        row.innerHTML = `
+          <input type="radio" name="correctChoice" value="${i}" ${i === q.a ? 'checked' : ''}>
+          <input type="text" value="${choice}" data-choice-idx="${i}">
+          <button onclick="removeChoiceRow(this)">✕</button>
+        `;
+        editor.appendChild(row);
+      });
+
+      document.getElementById('editorForm').classList.add('active');
+    }
+
+    function saveQuestion(){
+      const qText = document.getElementById('editQuestionText').value.trim();
+      if(!qText){
+        alert('Question text required');
+        return;
+      }
+
+      const choices = [];
+      document.querySelectorAll('[data-choice-idx]').forEach(input => {
+        const val = input.value.trim();
+        if(val) choices.push(val);
+      });
+
+      if(choices.length < 2){
+        alert('Need at least 2 choices');
+        return;
+      }
+
+      const correctRadio = document.querySelector('input[name="correctChoice"]:checked');
+      const correctIdx = correctRadio ? parseInt(correctRadio.value) : 0;
+
+      const stored = localStorage.getItem('handsPlease_quiz_v5');
+      let bank = stored ? JSON.parse(stored) : [...DEFAULT_BANK];
+
+      if(editingId){
+        // Update existing
+        bank = bank.map(q => {
+          if(q.id === editingId){
+            return { id: q.id, q: qText, c: choices, a: correctIdx };
+          }
+          return q;
+        });
+      } else {
+        // Add new
+        bank.push({
+          id: 'q' + Date.now(),
+          q: qText,
+          c: choices,
+          a: correctIdx
+        });
+      }
+
+      localStorage.setItem('handsPlease_quiz_v5', JSON.stringify(bank));
+      
+      renderQuestionsList();
+      cancelEdit();
+    }
+
+    function cancelEdit(){
+      document.getElementById('editorForm').classList.remove('active');
+      editingId = null;
+    }
+
+    function deleteCurrentQuestion(){
+      if(!editingId) return;
+      if(!confirm('Delete this question?')) return;
+      deleteQuestion(editingId);
+      cancelEdit();
+    }
+
+    function deleteQuestion(id){
+      const stored = localStorage.getItem('handsPlease_quiz_v5');
+      let bank = stored ? JSON.parse(stored) : [...DEFAULT_BANK];
+      
+      bank = bank.filter(q => q.id !== id);
+      
+      localStorage.setItem('handsPlease_quiz_v5', JSON.stringify(bank));
+      renderQuestionsList();
     }
 
     function resetToDefaults(){
       if(confirm('Reset all questions to defaults?')){
-        localStorage.removeItem('handsPlease_quiz_v4');
+        localStorage.removeItem('handsPlease_quiz_v5');
         location.reload();
+      }
+    }
+
+    function exportQuestions(){
+      const stored = localStorage.getItem('handsPlease_quiz_v5');
+      const bank = stored ? JSON.parse(stored) : [...DEFAULT_BANK];
+      const json = JSON.stringify(bank, null, 2);
+      
+      navigator.clipboard.writeText(json).then(() => {
+        alert('Questions copied to clipboard!');
+      }).catch(() => {
+        prompt('Copy this JSON:', json);
+      });
+    }
+
+    function importQuestions(){
+      const json = prompt('Paste question bank JSON:');
+      if(!json) return;
+      
+      try{
+        const parsed = JSON.parse(json);
+        if(!Array.isArray(parsed)) throw new Error('Not an array');
+        
+        localStorage.setItem('handsPlease_quiz_v5', JSON.stringify(parsed));
+        alert('Questions imported successfully!');
+        renderQuestionsList();
+      } catch(e){
+        alert('Invalid JSON: ' + e.message);
       }
     }
 
