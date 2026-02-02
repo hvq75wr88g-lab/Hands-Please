@@ -35,6 +35,7 @@
       padding: 20px;
       justify-content: center;
       align-items: center;
+      overflow-y: auto;
     }
 
     .quizCard{
@@ -136,8 +137,8 @@
       flex-direction: row;
       align-items: flex-end;
       justify-content: space-between;
-      padding: 0 20px 20px;
-      overflow: hidden;
+      padding: 0 30px 30px;
+      overflow: visible; /* Changed from hidden to visible */
       background: linear-gradient(to bottom, transparent, rgba(255,255,255,0.3));
     }
 
@@ -148,7 +149,7 @@
       gap: 20px;
       z-index: 20;
       align-items: center;
-      margin-bottom: 40px;
+      margin-bottom: 20px;
     }
 
     .egg{
@@ -159,6 +160,7 @@
       border-radius: 50% 50% 45% 45%;
       box-shadow: 0 6px 0 #ccc, inset 0 2px 0 rgba(255,255,255,0.8);
       position: relative;
+      transition: all 0.3s ease;
     }
 
     .egg::after{
@@ -173,30 +175,33 @@
       transform: rotate(-30deg);
     }
 
-    /* REALISTIC CRACK PATTERN */
+    /* REALISTIC CRACK using SVG pattern */
     .egg.cracked{
       background: #e8e8e8;
       border-color: #999;
-      transform: rotate(15deg);
+      transform: rotate(8deg);
+      animation: crackShake 0.3s ease-out;
+    }
+
+    @keyframes crackShake{
+      0%, 100%{ transform: rotate(8deg); }
+      25%{ transform: rotate(12deg); }
+      50%{ transform: rotate(4deg); }
+      75%{ transform: rotate(10deg); }
     }
 
     .egg.cracked::before{
       content: '';
       position: absolute;
       inset: 0;
-      background-image:
-        /* Main vertical crack */
-        linear-gradient(92deg, transparent 49%, #555 49.5%, #555 50.5%, transparent 51%),
-        /* Branch crack top-left */
-        linear-gradient(125deg, transparent 45%, #666 45.5%, #666 46%, transparent 46.5%),
-        /* Branch crack bottom-right */
-        linear-gradient(65deg, transparent 54%, #666 54.5%, #666 55%, transparent 55.5%),
-        /* Small crack detail */
-        linear-gradient(110deg, transparent 48%, #777 48.5%, #777 49%, transparent 49.5%),
-        /* Horizontal micro-crack */
-        linear-gradient(180deg, transparent 52%, #888 52.3%, #888 52.7%, transparent 53%);
       border-radius: inherit;
-      opacity: 0.8;
+      background-image:
+        /* Main jagged vertical crack */
+        url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 75"><path d="M30 10 L32 18 L28 25 L31 32 L29 40 L32 48 L28 55 L30 65" stroke="%23555" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M30 15 L26 20 M30 22 L34 28 M29 35 L25 38 M31 42 L35 46 M28 52 L24 56" stroke="%23666" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>');
+      background-size: contain;
+      background-position: center;
+      background-repeat: no-repeat;
+      opacity: 0.9;
     }
 
     /* Chicken Stage - RIGHT SIDE */
@@ -211,8 +216,8 @@
 
     .chickenSVG{
       width: 100%;
-      height: 100%;
-      max-height: 90%;
+      height: auto;
+      max-height: 95%;
       display: none;
       filter: drop-shadow(0 15px 20px rgba(0,0,0,0.15));
     }
