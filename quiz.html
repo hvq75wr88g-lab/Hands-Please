@@ -1621,7 +1621,7 @@ async function sbSaveQuestions(questionsArr){
       editor.appendChild(row);
     }
 
-    function saveQuestion(){
+   async function saveQuestion(){
       const qText = document.getElementById('editQuestionText').value.trim();
       if(!qText){
         alert('Question text is required');
@@ -1669,8 +1669,8 @@ async function sbSaveQuestions(questionsArr){
         });
       }
       
-      localStorage.setItem('handsPlease_quiz_v5', JSON.stringify(questions)); // optional local cache
-sbSaveQuestions(questions).catch(err => console.warn("Supabase save questions failed:", err));
+     await sbSaveQuestions(questions);
+localStorage.setItem('handsPlease_quiz_v5', JSON.stringify(questions)); // optional local cache
       
       cancelEdit();
       refreshQuestionsList();
