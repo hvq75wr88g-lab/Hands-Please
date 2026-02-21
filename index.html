@@ -150,7 +150,15 @@
       justify-content: center;
       gap: 0;
       margin-top: 1.5rem;
+      /* Mobile: allow horizontal scroll */
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scroll-behavior: smooth;
+      scrollbar-width: none;         /* Firefox */
+      -ms-overflow-style: none;      /* IE/Edge */
     }
+
+    .tabs::-webkit-scrollbar { display: none; }  /* Chrome/Safari */
 
     .tab-btn {
       padding: 0.7rem 2.25rem;
@@ -167,6 +175,9 @@
       position: relative;
       bottom: -1px;
       transition: color var(--ease), border-color var(--ease);
+      /* Prevent shrinking / wrapping on small screens */
+      flex-shrink: 0;
+      white-space: nowrap;
     }
 
     .tab-btn:hover { color: var(--text); }
@@ -923,6 +934,11 @@
       document.querySelectorAll(".tab-btn").forEach(btn => {
         btn.classList.toggle("active", btn.dataset.tab === tab);
       });
+      // Scroll active tab into view on mobile
+      const activeBtn = document.querySelector(`.tab-btn[data-tab="${tab}"]`);
+      if (activeBtn) {
+        activeBtn.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+      }
       renderGrid();
     }
 
