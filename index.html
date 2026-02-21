@@ -1415,9 +1415,8 @@
         .from("menu-images")
         .upload(uniqueName, file, { cacheControl: "3600", upsert: false });
       if (uploadError) { console.error(uploadError); alert("Image upload failed."); return; }
-      const {  publicData } = supabaseClient.storage.from("menu-images").getPublicUrl(uploadData.path);
-      imageUrl = publicData.publicUrl;
-    }
+      imageUrl = `${SUPABASE_URL}/storage/v1/object/public/menu-images/${uploadData.path}`;
+}
 
     const category = document.getElementById("foodCategory").value || editorState.category || "breakfast";
 
