@@ -1390,7 +1390,7 @@ if (uploadError || !uploadData) {
   return;
         }
 
-        imageUrl = `${SUPABASE_URL}/storage/v1/object/public/menu-images/${uploadData.path}`;
+        imageUrl = `${SUPABASE_URL}/storage/v1/object/public/menu-images/${uniqueName}`;
       }
 
       let sortOrder = 0;
