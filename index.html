@@ -812,6 +812,9 @@
     <div class="tabs">
       <button class="tab-btn active" data-tab="breakfast" onclick="switchTab('breakfast')">Breakfast</button>
       <button class="tab-btn" data-tab="brunch" onclick="switchTab('brunch')">Brunch</button>
+      <button class="tab-btn" data-tab="lunch" onclick="switchTab('lunch')">Lunch</button>
+      <button class="tab-btn" data-tab="dinner" onclick="switchTab('dinner')">Dinner</button>
+      <button class="tab-btn" data-tab="drinks" onclick="switchTab('drinks')">Drinks</button>
     </div>
   </div>
 
@@ -1146,6 +1149,9 @@
             <select id="foodCategory">
               <option value="breakfast" ${(editorState.category || "breakfast") === "breakfast" ? "selected" : ""}>Breakfast</option>
               <option value="brunch" ${(editorState.category || "breakfast") === "brunch" ? "selected" : ""}>Brunch</option>
+              <option value="lunch" ${(editorState.category || "breakfast") === "lunch" ? "selected" : ""}>Lunch</option>
+              <option value="dinner" ${(editorState.category || "breakfast") === "dinner" ? "selected" : ""}>Dinner</option>
+              <option value="drinks" ${(editorState.category || "breakfast") === "drinks" ? "selected" : ""}>Drinks</option>
             </select>
           </div>
           <div class="form-group">

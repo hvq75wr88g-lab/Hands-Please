@@ -1008,6 +1008,187 @@
       }
     }
 
+    /* =====================================================
+       NEW ANIMATIONS A–H
+       ===================================================== */
+
+    /* A. EGG SHATTER */
+    .egg.shattering{
+      animation: eggShatterBurst 0.65s ease-out forwards;
+      z-index: 10;
+    }
+
+    @keyframes eggShatterBurst{
+      0%  { transform: scale(1) rotate(0deg); filter: brightness(1); }
+      12% { transform: scale(1.45) rotate(-8deg); filter: brightness(2.2);
+            box-shadow: 0 0 0 #ccc, 0 0 30px rgba(255,220,50,0.9); }
+      28% { transform: scale(1.2) rotate(12deg); filter: brightness(1.4); }
+      45% { transform: scale(0.88) rotate(-5deg); filter: brightness(1); }
+      60% { transform: scale(1.04) rotate(9deg); }
+      78% { transform: scale(1) rotate(7deg); }
+      100%{ transform: rotate(8deg); }
+    }
+
+    .yolkDrip{
+      position: absolute;
+      bottom: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 24px;
+      height: 0;
+      background: radial-gradient(ellipse at top, #f1c40f 30%, #e67e22 100%);
+      border-radius: 0 0 60% 60%;
+      animation: yolkDripAnim 1.1s ease-out 0.25s both;
+      pointer-events: none;
+      z-index: 20;
+    }
+
+    @keyframes yolkDripAnim{
+      0%  { height: 0; opacity: 1; }
+      40% { height: 24px; opacity: 1; }
+      70% { height: 32px; opacity: 1; }
+      100%{ height: 26px; opacity: 0.55; }
+    }
+
+    /* B. TIMER HEARTBEAT */
+    .timerBar.heartbeat{
+      animation: timerHeartbeat 0.55s ease-in-out infinite;
+    }
+
+    @keyframes timerHeartbeat{
+      0%,100%{ opacity: 1; }
+      15%    { opacity: 0.3; }
+      30%    { opacity: 1; }
+      48%    { opacity: 0.55; }
+      64%    { opacity: 1; }
+    }
+
+    .quizCard.urgency{
+      animation: cardUrgencyPulse 0.55s ease-in-out infinite;
+    }
+
+    @keyframes cardUrgencyPulse{
+      0%,100%{ box-shadow: 0 10px 40px rgba(0,0,0,0.1); }
+      50%    { box-shadow: 0 10px 40px rgba(231,76,60,0.4),
+                           0 0 0 3px rgba(231,76,60,0.3); }
+    }
+
+    /* D. CHOICE STAGGER IN */
+    @keyframes choiceSlideIn{
+      from{ opacity: 0; transform: translateX(-28px); }
+      to  { opacity: 1; transform: translateX(0); }
+    }
+
+    .choice.stagger-in{
+      opacity: 0;
+      animation: choiceSlideIn 0.3s ease-out both;
+    }
+
+    /* E. CORRECT GLOW PULSE */
+    @keyframes correctGlowPulse{
+      0%,100%{ box-shadow: 0 0 0 0 rgba(39,174,96,0); }
+      50%    { box-shadow: 0 0 22px 8px rgba(39,174,96,0.45); }
+    }
+
+    .choice.correct-highlight.glow-pulse{
+      animation: correctGlowPulse 0.5s ease-in-out 3;
+    }
+
+    /* F. SUBMIT RIPPLE */
+    .submitBtn{ position: relative; overflow: hidden; }
+
+    .ripple{
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.45);
+      transform: scale(0);
+      animation: rippleExpand 0.65s linear forwards;
+      pointer-events: none;
+    }
+
+    @keyframes rippleExpand{
+      to{ transform: scale(50); opacity: 0; }
+    }
+
+    /* G. VICTORY ENTRANCE & CONFETTI */
+    @keyframes victoryEntrance{
+      0%  { opacity: 0; transform: translate(-50%,-50%) scale(0.4) rotate(-4deg); }
+      55% { transform: translate(-50%,-50%) scale(1.07) rotate(1deg); }
+      75% { transform: translate(-50%,-50%) scale(0.97) rotate(-0.5deg); }
+      100%{ opacity: 1; transform: translate(-50%,-50%) scale(1) rotate(0deg); }
+    }
+
+    .victoryPopup.celebrating{
+      animation: victoryEntrance 0.75s cubic-bezier(0.34,1.56,0.64,1) both;
+    }
+
+    .confettiPiece{
+      position: fixed;
+      top: -20px;
+      border-radius: 3px;
+      pointer-events: none;
+      z-index: 9999;
+      animation: confettiFall linear both;
+    }
+
+    @keyframes confettiFall{
+      0%  { transform: translateY(0) rotate(0deg); opacity: 1; }
+      25% { transform: translateY(25vh) rotate(180deg) scaleX(-1); }
+      50% { transform: translateY(55vh) rotate(360deg) scaleX(1); }
+      75% { transform: translateY(80vh) rotate(540deg) scaleX(-1); }
+      100%{ transform: translateY(115vh) rotate(720deg); opacity: 0; }
+    }
+
+    /* H. CHICKEN ENTRANCE */
+    @keyframes chickenEntrance{
+      0%  { transform: translateX(220px) scale(0.6); opacity: 0; }
+      55% { transform: translateX(-18px) scale(1.08); opacity: 1; }
+      75% { transform: translateX(10px) scale(0.97); }
+      100%{ transform: translateX(0) scale(1); opacity: 1; }
+    }
+
+    .chickenStage.entering{
+      animation: chickenEntrance 0.75s cubic-bezier(0.34,1.56,0.64,1) both;
+    }
+
+    /* NAME ENTRY CARD BOUNCE IN */
+    @keyframes nameCardDrop{
+      0%  { opacity: 0; transform: translateY(-60px) scale(0.9); }
+      60% { transform: translateY(10px) scale(1.02); }
+      80% { transform: translateY(-5px) scale(0.99); }
+      100%{ opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .nameEntryCard{
+      animation: nameCardDrop 0.6s cubic-bezier(0.34,1.56,0.64,1) both;
+    }
+
+    /* GAME OVER DRAMATIC ENTRANCE */
+    @keyframes gameOverShakeIn{
+      0%  { opacity: 0; transform: translate(-50%,-50%) scale(0.5); }
+      40% { transform: translate(-50%,-50%) scale(1.06) rotate(2deg); }
+      60% { transform: translate(-50%,-50%) scale(0.97) rotate(-1.5deg); }
+      75% { transform: translate(-50%,-50%) scale(1.02) rotate(1deg); }
+      88% { transform: translate(-50%,-50%) scale(0.99) rotate(-0.5deg); }
+      100%{ opacity: 1; transform: translate(-50%,-50%) scale(1) rotate(0deg); }
+    }
+
+    .gameOverPopup.entering{
+      animation: gameOverShakeIn 0.65s cubic-bezier(0.34,1.56,0.64,1) both;
+    }
+
+    /* REMAINING EGGS PULSE */
+    @keyframes eggAlive{
+      0%,100%{ transform: scale(1); }
+      50%    { transform: scale(1.04); }
+    }
+
+    .egg:not(.cracked).alive-pulse{
+      animation: eggAlive 2s ease-in-out infinite;
+    }
+
   </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -1284,6 +1465,15 @@
 
     function setChickenMood(mood) {
       document.body.className = mood;
+      // H. Chicken entrance on first appearance
+      if (chickenFirstEntry) {
+        chickenFirstEntry = false;
+        const stage = document.querySelector('.chickenStage');
+        if (stage) {
+          stage.classList.add('entering');
+          stage.addEventListener('animationend', () => stage.classList.remove('entering'), { once: true });
+        }
+      }
       startChickenAnimation(mood);
     }
 
@@ -1386,6 +1576,15 @@
         if (count) count.style.color = '#e74c3c';
       }
       if (count) count.textContent = Math.ceil(timeLeft) + 's';
+      // B. Heartbeat pulse at low time
+      const card = document.querySelector('.quizCard');
+      if (timeLeft <= 5 && timeLeft > 0) {
+        bar.classList.add('heartbeat');
+        if (card) card.classList.add('urgency');
+      } else {
+        bar.classList.remove('heartbeat');
+        if (card) card.classList.remove('urgency');
+      }
     }
 
     function handleTimerExpired() {
@@ -1405,8 +1604,8 @@
       setChickenMood('angry');
 
       if (strikes <= 3) {
-        const egg = document.getElementById('egg' + strikes);
-        if (egg) egg.classList.add('cracked');
+        // A. Shatter egg animation
+        shatterEgg(document.getElementById('egg' + strikes));
       }
 
       document.getElementById('submitBtn').disabled = true;
@@ -1480,6 +1679,8 @@
         if (radio) radio.disabled = true;
         if (i === correctIdx) {
           label.classList.add('correct-highlight');
+          // E. Glow pulse on correct answer
+          setTimeout(() => label.classList.add('glow-pulse'), 30);
         } else if (i === selectedIdx) {
           label.classList.add('wrong-highlight');
         }
@@ -1510,6 +1711,7 @@
     let questionStartTime = 0;
     let editingId = null;
     let playerName = '';
+    let chickenFirstEntry = true;
 
     // === NAME ENTRY ===
     async function startQuiz() {
@@ -1563,10 +1765,11 @@
       gameOver = false;
       questionAnswered = false;
 
+      chickenFirstEntry = true;
       setChickenMood('wink');
       document.getElementById('gameOverPopup').style.display = 'none';
       document.getElementById('victoryPopup').style.display = 'none';
-      document.querySelectorAll('.egg').forEach(e => e.className = 'egg');
+      document.querySelectorAll('.egg').forEach(e => e.className = 'egg alive-pulse');
       document.getElementById('scoreDisplay').innerText = '0 pts';
       updateStreakDisplay();
 
@@ -1583,6 +1786,12 @@
       questionAnswered = false;
       questionStartTime = Date.now();
 
+      // Clean up urgency state from previous question
+      const _timerBar = document.getElementById('timerBar');
+      if (_timerBar) _timerBar.classList.remove('heartbeat');
+      const _card = document.querySelector('.quizCard');
+      if (_card) _card.classList.remove('urgency');
+
       const q = questions[currentIdx];
       document.getElementById('qNum').innerText = `Q ${currentIdx + 1}/${questions.length}`;
       document.getElementById('scoreDisplay').innerText = `${totalPoints} pts`;
@@ -1592,9 +1801,11 @@
       const container = document.getElementById('choicesContainer');
       container.innerHTML = '';
 
+      // D. Stagger choices in
       q.c.forEach((choice, i) => {
         const label = document.createElement('label');
-        label.className = 'choice';
+        label.className = 'choice stagger-in';
+        label.style.animationDelay = (i * 65) + 'ms';
         label.innerHTML = `<input type="radio" name="answer" value="${i}"> ${choice}`;
         container.appendChild(label);
       });
@@ -1604,7 +1815,17 @@
     }
 
     // === SUBMIT ===
-    document.getElementById('submitBtn').addEventListener('click', () => {
+    document.getElementById('submitBtn').addEventListener('click', (e) => {
+      // F. Ripple effect
+      const _btn = e.currentTarget;
+      const _rect = _btn.getBoundingClientRect();
+      const _r = document.createElement('span');
+      _r.className = 'ripple';
+      _r.style.left = (e.clientX - _rect.left - 5) + 'px';
+      _r.style.top  = (e.clientY - _rect.top  - 5) + 'px';
+      _btn.appendChild(_r);
+      setTimeout(() => _r.remove(), 700);
+
       if (gameOver || questionAnswered) return;
 
       const selected = document.querySelector('input[name="answer"]:checked');
@@ -1627,11 +1848,13 @@
         score++;
         streak++;
         const pts = calculatePoints();
+        const prevPoints = totalPoints;
         totalPoints += pts.total;
 
         document.getElementById('feedbackText').innerText = '✅ Correct!';
         document.getElementById('feedbackText').style.color = 'var(--ok)';
-        document.getElementById('scoreDisplay').innerText = `${totalPoints} pts`;
+        // C. Score roll-up
+        animateScore(prevPoints, totalPoints);
 
         showScorePopup(pts);
         updateStreakDisplay();
@@ -1657,8 +1880,8 @@
         document.getElementById('feedbackText').style.color = 'var(--danger)';
 
         if (strikes <= 3) {
-          const egg = document.getElementById('egg' + strikes);
-          if (egg) egg.classList.add('cracked');
+          // A. Shatter egg animation
+          shatterEgg(document.getElementById('egg' + strikes));
         }
 
         updateStreakDisplay();
@@ -1685,21 +1908,17 @@
 
       if (strikes >= 3) {
         document.getElementById('gameOverScore').innerText = `Score: ${score}/${questions.length} correct  •  ${totalPoints} pts`;
-        document.getElementById('gameOverPopup').style.display = 'block';
+        const goPopup = document.getElementById('gameOverPopup');
+        goPopup.style.display = 'block';
+        // Dramatic game-over entrance
+        goPopup.classList.remove('entering');
+        void goPopup.offsetWidth; // reflow
+        goPopup.classList.add('entering');
         setChickenMood('peck');
         saveScore(totalPoints, maxPoints);
       } else if (completed) {
-        document.getElementById('finalScore').innerText = `${totalPoints} pts`;
-
-        const percent = (score / questions.length) * 100;
-        let message = '';
-        if (score === questions.length) message = 'Perfect score! You are a breakfast LEGEND! 🏆';
-        else if (percent >= 80) message = 'Excellent work! Almost there!';
-        else if (percent >= 60) message = 'Good job! Keep studying!';
-        else message = 'Nice try! Review the material and try again!';
-
-        document.getElementById('victoryMessage').innerText = message;
-        document.getElementById('victoryPopup').style.display = 'block';
+        // G. Victory celebration sequence
+        showVictory();
         setChickenMood('happy');
         saveScore(totalPoints, maxPoints);
       }
@@ -2005,6 +2224,111 @@
       };
       input.click();
     }
+
+    // =====================================================
+    // A. SHATTER EGG
+    // =====================================================
+    function shatterEgg(eggEl) {
+      if (!eggEl) return;
+      eggEl.classList.add('shattering');
+
+      const drip = document.createElement('div');
+      drip.className = 'yolkDrip';
+      eggEl.appendChild(drip);
+
+      setTimeout(() => {
+        eggEl.classList.remove('shattering');
+        eggEl.classList.add('cracked');
+        setTimeout(() => drip.remove(), 1500);
+      }, 650);
+    }
+
+    // =====================================================
+    // C. SCORE ROLL-UP
+    // =====================================================
+    function animateScore(from, to, duration = 550) {
+      const el = document.getElementById('scoreDisplay');
+      if (!el) return;
+      const start = performance.now();
+      function tick(now) {
+        const progress = Math.min((now - start) / duration, 1);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        el.innerText = Math.round(from + (to - from) * eased) + ' pts';
+        if (progress < 1) requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+    }
+
+    function animateScoreEl(el, from, to, duration = 1200) {
+      if (!el) return;
+      const start = performance.now();
+      function tick(now) {
+        const progress = Math.min((now - start) / duration, 1);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        el.innerText = Math.round(from + (to - from) * eased) + ' pts';
+        if (progress < 1) requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+    }
+
+    // =====================================================
+    // G. CONFETTI + TYPEWRITER + VICTORY SEQUENCE
+    // =====================================================
+    function launchConfetti() {
+      const colors = ['#f39c12','#e74c3c','#27ae60','#3498db','#9b59b6','#e67e22','#1abc9c','#f06292'];
+      for (let i = 0; i < 80; i++) {
+        setTimeout(() => {
+          const piece = document.createElement('div');
+          piece.className = 'confettiPiece';
+          piece.style.left = (Math.random() * 100) + 'vw';
+          piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+          piece.style.width  = (6 + Math.random() * 8) + 'px';
+          piece.style.height = (8 + Math.random() * 10) + 'px';
+          piece.style.animationDuration = (2.5 + Math.random() * 2.5) + 's';
+          document.body.appendChild(piece);
+          setTimeout(() => piece.remove(), 6000);
+        }, Math.random() * 1500);
+      }
+    }
+
+    function typewriterText(el, text, speed = 45) {
+      el.innerText = '';
+      let i = 0;
+      function next() {
+        if (i < text.length) {
+          el.innerText += text[i];
+          i++;
+          setTimeout(next, speed);
+        }
+      }
+      next();
+    }
+
+    function showVictory() {
+      const popup        = document.getElementById('victoryPopup');
+      const finalScoreEl = document.getElementById('finalScore');
+      const msgEl        = document.getElementById('victoryMessage');
+
+      const percent = (score / questions.length) * 100;
+      let message = '';
+      if (score === questions.length) message = 'Perfect score! You are a breakfast LEGEND! 🏆';
+      else if (percent >= 80) message = 'Excellent work! Almost there!';
+      else if (percent >= 60) message = 'Good job! Keep studying!';
+      else message = 'Nice try! Review the material and try again!';
+
+      finalScoreEl.innerText = '0 pts';
+      msgEl.innerText = '';
+
+      popup.classList.remove('celebrating');
+      void popup.offsetWidth; // reflow to restart animation
+      popup.style.display = 'block';
+      popup.classList.add('celebrating');
+
+      setTimeout(() => launchConfetti(), 350);
+      setTimeout(() => animateScoreEl(finalScoreEl, 0, totalPoints), 500);
+      setTimeout(() => typewriterText(msgEl, message), 1400);
+    }
+
   </script>
 </body>
 </html>
