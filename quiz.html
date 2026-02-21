@@ -1189,6 +1189,128 @@
       animation: eggAlive 2s ease-in-out infinite;
     }
 
+    /* =====================================================
+       QUIZ POLISH — 10 IMPROVEMENTS
+       ===================================================== */
+
+    /* 1. SELECTED CHOICE HIGHLIGHT (before submitting) */
+    .choice:has(input:checked){
+      border-color: var(--accent) !important;
+      background: #fff4eb !important;
+      transform: translateX(5px);
+    }
+
+    /* 2. PROGRESS DOTS */
+    .progressDots{
+      display: flex;
+      justify-content: center;
+      gap: 7px;
+      margin: 8px 0 14px;
+    }
+
+    .progressDot{
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #e0e0e0;
+      transition: background 0.3s, transform 0.3s;
+      flex-shrink: 0;
+    }
+
+    .progressDot.done{
+      background: var(--ok);
+    }
+
+    .progressDot.current{
+      background: var(--accent);
+      transform: scale(1.35);
+    }
+
+    .progressDot.wrong{
+      background: var(--danger);
+    }
+
+    /* 3. QUESTION FADE-IN */
+    @keyframes questionFadeIn{
+      from{ opacity: 0; transform: translateY(10px); }
+      to  { opacity: 1; transform: translateY(0); }
+    }
+
+    .questionText.fade-in{
+      animation: questionFadeIn 0.28s ease-out both;
+    }
+
+    .choices.fade-in{
+      animation: questionFadeIn 0.28s ease-out 0.05s both;
+    }
+
+    /* 4. TIMER GLOW */
+    .timerBar.danger-glow{
+      filter: drop-shadow(0 0 5px rgba(231,76,60,0.7));
+    }
+
+    /* 5. DIMMED choices after answer */
+    .choice.dimmed{
+      opacity: 0.38;
+      filter: grayscale(0.4);
+    }
+
+    /* 6. STREAK MILESTONE FLASH */
+    @keyframes streakCardFlash{
+      0%,100%{ background: white; }
+      50%    { background: rgba(243,156,18,0.12); }
+    }
+
+    .quizCard.streak-flash{
+      animation: streakCardFlash 0.55s ease-in-out;
+    }
+
+    /* 7. FEEDBACK FADE-IN */
+    @keyframes feedbackFadeIn{
+      from{ opacity: 0; transform: translateY(5px); }
+      to  { opacity: 1; transform: translateY(0); }
+    }
+
+    .feedback.reveal{
+      animation: feedbackFadeIn 0.25s ease-out both;
+    }
+
+    /* 8. SUBMIT BUTTON ACTIVE PRESS */
+    .submitBtn:active:not(:disabled){
+      transform: scale(0.97);
+      transition: transform 0.08s;
+    }
+
+    /* 9. SCORE DISPLAY TREATMENT */
+    #scoreDisplay{
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--accent);
+      transition: color 0.4s;
+    }
+
+    @keyframes scorePop{
+      0%  { transform: scale(1); }
+      40% { transform: scale(1.25); color: var(--gold); }
+      100%{ transform: scale(1); }
+    }
+
+    #scoreDisplay.pop{
+      animation: scorePop 0.45s ease-out;
+    }
+
+    /* 10. Q COUNTER — BOLDER CURRENT NUMBER */
+    #qNum{
+      font-size: 13px;
+      color: #95a5a6;
+    }
+
+    #qNum .qCurrent{
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
   </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -1225,6 +1347,9 @@
         <div class="timerBar" id="timerBar"></div>
         <span class="timerCount" id="timerCount">15s</span>
       </div>
+
+      <!-- 2. Progress dots -->
+      <div class="progressDots" id="progressDots"></div>
 
       <div class="quizTitle">Hands Please!</div>
       <div class="playerName" id="playerNameDisplay"></div>
@@ -1576,13 +1701,13 @@
         if (count) count.style.color = '#e74c3c';
       }
       if (count) count.textContent = Math.ceil(timeLeft) + 's';
-      // B. Heartbeat pulse at low time
+      // B. Heartbeat pulse at low time  +  4. Timer glow
       const card = document.querySelector('.quizCard');
       if (timeLeft <= 5 && timeLeft > 0) {
-        bar.classList.add('heartbeat');
+        bar.classList.add('heartbeat', 'danger-glow');
         if (card) card.classList.add('urgency');
       } else {
-        bar.classList.remove('heartbeat');
+        bar.classList.remove('heartbeat', 'danger-glow');
         if (card) card.classList.remove('urgency');
       }
     }
@@ -1595,8 +1720,10 @@
       strikes++;
       streak = 0;
 
-      document.getElementById('feedbackText').innerText = `⏰ Time's up! Correct: ${q.c[q.a]}`;
-      document.getElementById('feedbackText').style.color = 'var(--danger)';
+      const _fb = document.getElementById('feedbackText');
+      _fb.className = 'feedback reveal';
+      _fb.innerText = `⏰ Time's up! Correct: ${q.c[q.a]}`;
+      _fb.style.color = 'var(--danger)';
 
       highlightAnswers(-1, q.a);
       updateStreakDisplay();
@@ -1606,6 +1733,13 @@
       if (strikes <= 3) {
         // A. Shatter egg animation
         shatterEgg(document.getElementById('egg' + strikes));
+      }
+
+      // 2. Mark current progress dot as wrong
+      const _dots = document.getElementById('progressDots');
+      if (_dots) {
+        const _currentDot = _dots.querySelector('.progressDot.current');
+        if (_currentDot) { _currentDot.classList.remove('current'); _currentDot.classList.add('wrong'); }
       }
 
       document.getElementById('submitBtn').disabled = true;
@@ -1683,6 +1817,9 @@
           setTimeout(() => label.classList.add('glow-pulse'), 30);
         } else if (i === selectedIdx) {
           label.classList.add('wrong-highlight');
+        } else {
+          // 5. Dim irrelevant choices
+          label.classList.add('dimmed');
         }
       });
     }
@@ -1786,20 +1923,37 @@
       questionAnswered = false;
       questionStartTime = Date.now();
 
-      // Clean up urgency state from previous question
+      // Clean up urgency / glow state from previous question
       const _timerBar = document.getElementById('timerBar');
-      if (_timerBar) _timerBar.classList.remove('heartbeat');
+      if (_timerBar) _timerBar.classList.remove('heartbeat', 'danger-glow');
       const _card = document.querySelector('.quizCard');
       if (_card) _card.classList.remove('urgency');
 
       const q = questions[currentIdx];
-      document.getElementById('qNum').innerText = `Q ${currentIdx + 1}/${questions.length}`;
+
+      // 10. Bold current question number
+      const qNumEl = document.getElementById('qNum');
+      qNumEl.innerHTML = `Q <span class="qCurrent">${currentIdx + 1}</span>/${questions.length}`;
+
       document.getElementById('scoreDisplay').innerText = `${totalPoints} pts`;
-      document.getElementById('questionText').innerText = q.q;
-      document.getElementById('feedbackText').innerText = '';
+
+      // 3. Fade-in question text
+      const questionTextEl = document.getElementById('questionText');
+      questionTextEl.classList.remove('fade-in');
+      void questionTextEl.offsetWidth;
+      questionTextEl.innerText = q.q;
+      questionTextEl.classList.add('fade-in');
+
+      // 7. Reset feedback
+      const feedbackEl = document.getElementById('feedbackText');
+      feedbackEl.innerText = '';
+      feedbackEl.className = 'feedback';
 
       const container = document.getElementById('choicesContainer');
       container.innerHTML = '';
+      container.classList.remove('fade-in');
+      void container.offsetWidth;
+      container.classList.add('fade-in');
 
       // D. Stagger choices in
       q.c.forEach((choice, i) => {
@@ -1809,6 +1963,19 @@
         label.innerHTML = `<input type="radio" name="answer" value="${i}"> ${choice}`;
         container.appendChild(label);
       });
+
+      // 2. Progress dots
+      const dotsContainer = document.getElementById('progressDots');
+      if (dotsContainer) {
+        dotsContainer.innerHTML = '';
+        questions.forEach((_, i) => {
+          const dot = document.createElement('div');
+          dot.className = 'progressDot';
+          if (i < currentIdx) dot.classList.add('done');
+          else if (i === currentIdx) dot.classList.add('current');
+          dotsContainer.appendChild(dot);
+        });
+      }
 
       document.getElementById('submitBtn').disabled = false;
       startTimer();
@@ -1851,17 +2018,33 @@
         const prevPoints = totalPoints;
         totalPoints += pts.total;
 
-        document.getElementById('feedbackText').innerText = '✅ Correct!';
-        document.getElementById('feedbackText').style.color = 'var(--ok)';
-        // C. Score roll-up
+        // 7. Feedback fade-in
+        const fbEl = document.getElementById('feedbackText');
+        fbEl.className = 'feedback reveal';
+        fbEl.innerText = '✅ Correct!';
+        fbEl.style.color = 'var(--ok)';
+
+        // C. Score roll-up  +  9. Score display pop
         animateScore(prevPoints, totalPoints);
+        const scoreEl = document.getElementById('scoreDisplay');
+        scoreEl.classList.remove('pop');
+        void scoreEl.offsetWidth;
+        scoreEl.classList.add('pop');
 
         showScorePopup(pts);
         updateStreakDisplay();
         setChickenMood('happy');
 
+        // 6. Streak flash on milestone
         if (streak === 3 || streak === 5) {
           playSound('streak');
+          const flashCard = document.querySelector('.quizCard');
+          if (flashCard) {
+            flashCard.classList.remove('streak-flash');
+            void flashCard.offsetWidth;
+            flashCard.classList.add('streak-flash');
+            flashCard.addEventListener('animationend', () => flashCard.classList.remove('streak-flash'), { once: true });
+          }
         } else {
           playSound('correct');
         }
@@ -1876,8 +2059,11 @@
         strikes++;
         streak = 0;
 
-        document.getElementById('feedbackText').innerText = `❌ Wrong! Correct: ${q.c[q.a]}`;
-        document.getElementById('feedbackText').style.color = 'var(--danger)';
+        // 7. Feedback fade-in
+        const fbEl2 = document.getElementById('feedbackText');
+        fbEl2.className = 'feedback reveal';
+        fbEl2.innerText = `❌ Wrong! Correct: ${q.c[q.a]}`;
+        fbEl2.style.color = 'var(--danger)';
 
         if (strikes <= 3) {
           // A. Shatter egg animation
@@ -1887,6 +2073,13 @@
         updateStreakDisplay();
         setChickenMood('angry');
         playSound('wrong');
+
+        // 2. Mark current progress dot as wrong
+        const dots = document.getElementById('progressDots');
+        if (dots) {
+          const currentDot = dots.querySelector('.progressDot.current');
+          if (currentDot) { currentDot.classList.remove('current'); currentDot.classList.add('wrong'); }
+        }
 
         if (strikes >= 3) {
           gameOver = true;
