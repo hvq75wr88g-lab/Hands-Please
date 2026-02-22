@@ -847,8 +847,8 @@ body.peck .chickenImage.angry{
   -webkit-backdrop-filter: blur(24px);
   border: 1px solid var(--glass-border);
   border-radius: 20px;
-  padding: 40px;
-  max-width: 460px;
+  padding: 36px 28px;
+  max-width: 380px;
   width: 100%;
   text-align: center;
   box-shadow: 0 20px 60px rgba(0,0,0,0.5);
@@ -877,10 +877,6 @@ body.peck .chickenImage.angry{
 
 .nameEntryCard input{
   width: 100%;
-  max-width: 300px;
-  margin-left: auto;
-  margin-right: auto;
-  display: block;
   padding: 14px;
   font-size: 17px;
   border: 1.5px solid rgba(255,255,255,0.1);
@@ -1791,20 +1787,20 @@ body.victory .chickenImage.happy{
   30%{ opacity: 1; transform: translate(var(--ex), -30px) scale(1.2); }
   100%{ opacity: 0; transform: translate(var(--ex), -80px) scale(0.7); }
 }
-/* Chicken peek from bottom center — slides up to mid-screen */
+/* Chicken peek from bottom center — stays below content */
 .chickenPeek{
   position: fixed;
-  bottom: -200px;
+  bottom: -160px;
   left: 50%;
   transform: translateX(-50%);
-  width: 160px;
-  z-index: 501;
+  width: 120px;
+  z-index: 90;
   transition: bottom 0.7s cubic-bezier(0.34,1.56,0.64,1);
   pointer-events: none;
   visibility: hidden;
 }
 .chickenPeek.loaded{ visibility: visible; }
-.chickenPeek.visible{ bottom: calc(50vh - 100px); }
+.chickenPeek.visible{ bottom: 10px; }
 .chickenPeek img{ width: 100%; display: block; transform: none; }
 
 /* Timer frozen state */
