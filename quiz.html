@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-  <title>Breakfast Quiz - Hands Please</title>
+  <title>Hands Please! Quiz</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=Space+Mono:wght@700&display=swap" rel="stylesheet">
   <style>
@@ -53,6 +53,35 @@
     /* =====================================================
        LAYOUT
        ===================================================== */
+
+    /* === SECTION PICKER === */
+    .sectionScreen{
+      position: fixed; inset: 0; background: var(--bg-deep);
+      background-image: radial-gradient(ellipse at 50% 30%, rgba(212,175,55,0.06) 0%, transparent 60%);
+      display: none; align-items: center; justify-content: center; z-index: 498; padding: 16px;
+    }
+    .sectionCard{
+      background: var(--bg-card); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+      border: 1px solid var(--glass-border); border-radius: 20px; padding: 32px 28px;
+      max-width: 380px; width: 100%; text-align: center;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+      animation: nameCardDrop 0.5s cubic-bezier(0.34,1.56,0.64,1) both;
+    }
+    .sectionCard h2{ font-size: 24px; font-weight: 900; color: var(--accent); margin-bottom: 6px; }
+    .sectionCard .sectionSub{ font-size: 14px; color: var(--ink-muted); margin-bottom: 20px; }
+    .sectionBtns{ display: flex; flex-direction: column; gap: 10px; }
+    .sectionBtn{
+      display: flex; align-items: center; gap: 14px;
+      padding: 16px 18px; border-radius: 12px; border: 1.5px solid rgba(212,175,55,0.15);
+      background: rgba(255,255,255,0.03); cursor: pointer; transition: all 0.2s; text-align: left;
+    }
+    .sectionBtn:hover{ border-color: var(--accent); background: rgba(212,175,55,0.06); transform: translateY(-1px); }
+    .sectionBtn .secIcon{ font-size: 32px; }
+    .sectionBtn .secInfo{ flex: 1; }
+    .sectionBtn .secName{ font-size: 17px; font-weight: 800; color: var(--ink); }
+    .sectionBtn .secCount{ font-size: 11px; color: var(--ink-muted); margin-top: 2px; }
+    .sectionBtn.disabled{ opacity: 0.4; pointer-events: none; }
+
     .mainContainer{
       display: flex;
       align-items: center;
@@ -64,14 +93,143 @@
     }
 
     /* =====================================================
-       EGGS HUD
+       LIVES HUD (eggs / mimosas / oysters)
        ===================================================== */
-    .eggsHUD{ display: flex; flex-direction: column; gap: 26px; align-items: center; }
-    .eggsInline{ display: none; gap: 8px; align-items: center; }
-    .eggsInline .egg{ width: 36px; height: 44px; border-width: 1.5px; }
-    .eggsInline .egg::after{ top: 8px; left: 8px; width: 7px; height: 9px; }
+    .livesHUD{ display: flex; flex-direction: column; gap: 26px; align-items: center; }
+    .livesInline{ display: none; gap: 8px; align-items: center; }
 
-    .egg{
+    /* === MIMOSA GLASS (brunch) === */
+    .lifeItem.mimosa-shape{ width: 40px; height: 90px; position: relative; }
+    .mimosaGlass{
+      position: absolute; bottom: 22px; left: 50%; transform: translateX(-50%);
+      width: 28px; height: 52px;
+      background: linear-gradient(180deg, rgba(255,180,50,0.35) 0%, rgba(255,200,80,0.2) 40%, rgba(255,255,255,0.08) 100%);
+      border: 1.5px solid rgba(212,175,55,0.3);
+      border-radius: 2px 2px 6px 6px;
+      clip-path: polygon(8% 0%, 92% 0%, 100% 100%, 0% 100%);
+      box-shadow: inset 0 -10px 20px rgba(255,160,30,0.15);
+    }
+    .mimosaStem{
+      position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%);
+      width: 3px; height: 20px; background: rgba(212,175,55,0.3); border-radius: 2px;
+    }
+    .mimosaBase{
+      position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
+      width: 20px; height: 4px; background: rgba(212,175,55,0.3); border-radius: 2px;
+    }
+    .mimosaBubble{
+      position: absolute; width: 3px; height: 3px; border-radius: 50%;
+      background: rgba(255,255,255,0.35); animation: bubbleFloat 2s ease-in-out infinite;
+    }
+    .mimosaBubble:nth-child(1){ left: 30%; bottom: 40%; animation-delay: 0s; }
+    .mimosaBubble:nth-child(2){ left: 55%; bottom: 55%; animation-delay: 0.7s; }
+    .mimosaBubble:nth-child(3){ left: 40%; bottom: 35%; animation-delay: 1.4s; }
+    @keyframes bubbleFloat{
+      0%,100%{ transform: translateY(0); opacity: 0.3; } 50%{ transform: translateY(-10px); opacity: 0.7; }
+    }
+    /* Mimosa spill animation */
+    .lifeItem.mimosa-shape.cracked .mimosaGlass{
+      animation: mimosaTip 0.8s ease-out forwards;
+    }
+    @keyframes mimosaTip{
+      0%{ transform: translateX(-50%) rotate(0); }
+      40%{ transform: translateX(-30%) rotate(35deg); }
+      100%{ transform: translateX(-20%) rotate(55deg); opacity: 0.5; }
+    }
+    .mimosaSpill{
+      position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%);
+      width: 40px; height: 16px;
+      background: radial-gradient(ellipse, rgba(255,180,50,0.3) 0%, rgba(255,200,80,0.1) 60%, transparent 100%);
+      border-radius: 50%; opacity: 0;
+      animation: spillSpread 1s 0.3s ease-out forwards;
+    }
+    @keyframes spillSpread{
+      0%{ transform: translateX(-50%) scaleX(0); opacity: 0; }
+      50%{ opacity: 0.8; }
+      100%{ transform: translateX(-50%) scaleX(1.5); opacity: 0.5; }
+    }
+    .mimosaFizzParticle{
+      position: absolute; width: 4px; height: 4px; border-radius: 50%;
+      background: rgba(255,200,80,0.6); pointer-events: none;
+    }
+
+    /* === OYSTER (dinner) === */
+    .lifeItem.oyster-shape{ width: 80px; height: 55px; position: relative; }
+    .oysterShell{
+      position: absolute; inset: 0;
+      background: linear-gradient(145deg, rgba(180,170,155,0.25) 0%, rgba(140,135,120,0.12) 50%, rgba(120,115,100,0.06) 100%);
+      border: 2px solid rgba(212,175,55,0.2);
+      border-radius: 50% 50% 45% 45% / 55% 55% 35% 35%;
+      box-shadow: inset 0 -6px 15px rgba(0,0,0,0.15), 0 3px 10px rgba(0,0,0,0.2);
+    }
+    .oysterShell::after{
+      content: ''; position: absolute; top: 8px; left: 14px; width: 12px; height: 8px;
+      background: radial-gradient(ellipse, rgba(255,255,255,0.2) 0%, transparent 70%);
+      border-radius: 50%; transform: rotate(-15deg);
+    }
+    .oysterPearl{
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+      width: 12px; height: 12px; border-radius: 50%;
+      background: radial-gradient(ellipse at 35% 30%, rgba(255,255,255,0.7) 0%, rgba(220,215,230,0.5) 40%, rgba(180,175,190,0.3) 100%);
+      box-shadow: 0 1px 4px rgba(0,0,0,0.2), inset 0 1px 2px rgba(255,255,255,0.4);
+      transition: all 0.6s;
+    }
+    /* Oyster snap shut + crumble */
+    .lifeItem.oyster-shape.cracked .oysterShell{
+      animation: oysterSnap 0.8s ease-out forwards;
+    }
+    @keyframes oysterSnap{
+      0%{ transform: scaleY(1); } 20%{ transform: scaleY(0.3); }
+      40%{ transform: scaleY(0.5); } 60%{ transform: scaleY(0.2); border-color: rgba(200,180,150,0.4); }
+      100%{ transform: scaleY(0.15); opacity: 0.4; }
+    }
+    .lifeItem.oyster-shape.cracked .oysterPearl{
+      animation: pearlRoll 1s 0.3s ease-out forwards;
+    }
+    @keyframes pearlRoll{
+      0%{ transform: translate(-50%,-50%); }
+      50%{ transform: translate(20px, 15px) scale(0.8); }
+      100%{ transform: translate(30px, 25px) scale(0.5); opacity: 0; }
+    }
+
+    /* === IMAGE-BASED LIVES === */
+    .lifeItem.img-life{
+      width: 80px; height: 80px; position: relative; overflow: visible;
+      border-radius: 8px;
+    }
+    .lifeItem.img-life img{
+      width: 100%; height: 100%; object-fit: contain; display: block;
+      transition: opacity 0.3s, transform 0.3s;
+    }
+    .lifeItem.img-life.shattering img{
+      animation: lifeShake 0.5s ease-in-out;
+    }
+    @keyframes lifeShake{
+      0%,100%{ transform: rotate(0) scale(1); }
+      15%{ transform: rotate(8deg) scale(1.05); }
+      30%{ transform: rotate(-8deg) scale(1.05); }
+      45%{ transform: rotate(5deg) scale(1.02); }
+      60%{ transform: rotate(-5deg) scale(1.02); }
+      75%{ transform: rotate(2deg); }
+      90%{ transform: rotate(-2deg); }
+    }
+    .lifeItem.img-life.cracked img{ opacity: 1; }
+    .lifeItem.img-life.smashed img{ opacity: 1; transform: scale(0.9); }
+
+    /* Inline (mobile) image lives */
+    .livesInline .lifeItem.img-life{ width: 44px; height: 44px; }
+
+    /* Inline lives for mobile */
+    .livesInline .lifeItem.egg-shape{ width: 36px; height: 44px; border-width: 1.5px; }
+    .livesInline .lifeItem.egg-shape::after{ top: 8px; left: 8px; width: 7px; height: 9px; }
+    .livesInline .lifeItem.mimosa-shape{ width: 24px; height: 50px; }
+    .livesInline .lifeItem.mimosa-shape .mimosaGlass{ width: 16px; height: 30px; bottom: 14px; }
+    .livesInline .lifeItem.mimosa-shape .mimosaStem{ height: 12px; width: 2px; }
+    .livesInline .lifeItem.mimosa-shape .mimosaBase{ width: 12px; height: 3px; }
+    .livesInline .lifeItem.oyster-shape{ width: 44px; height: 30px; }
+    .livesInline .lifeItem.oyster-shape .oysterPearl{ width: 7px; height: 7px; }
+
+    .lifeItem.egg-shape{
       width: 74px;
       height: 92px;
       background: linear-gradient(145deg, rgba(255,255,255,0.12), rgba(255,255,255,0.04));
@@ -83,7 +241,7 @@
       overflow: visible;
     }
 
-    .egg::after{
+    .lifeItem.egg-shape::after{
       content: '';
       position: absolute;
       top: 18px;
@@ -96,13 +254,13 @@
     }
 
     /* Cracked state: hide the original egg, show halves via JS children */
-    .egg.cracked{
+    .lifeItem.egg-shape.cracked{
       background: transparent !important;
       border-color: transparent !important;
       box-shadow: none !important;
     }
 
-    .egg.cracked::after{ display: none; }
+    .lifeItem.egg-shape.cracked::after{ display: none; }
 
     /* Egg half shells — visible with good contrast */
     .eggHalf{
@@ -761,7 +919,7 @@
     /* =====================================================
        CHICKEN STAGE
        ===================================================== */
-    .chickenStage{
+    .mascotStage{
       display: flex;
       align-items: center;
       justify-content: center;
@@ -770,31 +928,31 @@
       position: relative;
     }
 
-    .chickenImage{
+    .mascotImage{
       width: 100%;
       height: 100%;
       object-fit: contain;
       display: none;
     }
 
-    .chickenImage.active{ display: block; }
+    .mascotImage.active{ display: block; }
 
-    body.happy .chickenImage.happy{
+    body.happy .mascotImage.happy{
       display: block;
       animation: bounceChicken 0.6s ease-in-out infinite alternate;
     }
 
-    body.angry .chickenImage.angry{
+    body.angry .mascotImage.angry{
       display: block;
       animation: shakeChicken 0.12s linear infinite;
     }
 
-    body.wink .chickenImage.wink{
+    body.wink .mascotImage.wink{
       display: block;
       animation: breatheChicken 3s ease-in-out infinite;
     }
 
-    body.peck .chickenImage.angry{
+    body.peck .mascotImage.angry{
       display: block;
       animation: peckChicken 0.5s ease-in-out infinite;
     }
@@ -1494,7 +1652,7 @@
        EGG SHATTER
        ===================================================== */
     /* Egg initial shake before crack */
-    .egg.shattering{
+    .lifeItem.shattering{
       animation: eggPreCrackShake 0.5s ease-out;
     }
 
@@ -1604,7 +1762,7 @@
       100%{ transform: translateX(0) scale(1); opacity: 1; }
     }
 
-    .chickenStage.entering{
+    .mascotStage.entering{
       animation: chickenEntrance 0.75s cubic-bezier(0.34,1.56,0.64,1) both;
     }
 
@@ -1660,8 +1818,8 @@
     /* === MOBILE — NO SCROLL, BIGGER TEXT === */
     @media (max-width: 1200px) {
       .mainContainer{ gap: 20px; }
-      .chickenStage{ width: 230px; height: 230px; }
-      .eggsHUD{ gap: 18px; }
+      .mascotStage{ width: 230px; height: 230px; }
+      .livesHUD{ gap: 18px; }
       .egg{ width: 64px; height: 80px; }
     }
 
@@ -1677,11 +1835,11 @@
         align-items: stretch;
       }
       /* Hide sidebar eggs & chicken on mobile */
-      .eggsHUD{ display: none !important; }
-      .chickenStage{ display: none !important; }
+      .livesHUD{ display: none !important; }
+      .mascotStage{ display: none !important; }
       /* Show inline eggs in card header */
-      .eggsInline{ display: flex; }
-      .eggsInline .egg{ width: 36px; height: 44px; }
+      .livesInline{ display: flex; }
+      .livesInline .egg{ width: 36px; height: 44px; }
       /* Hide title on mobile */
       .quizTitle{ display: none; }
       .playerName{ display: none; }
@@ -1749,7 +1907,7 @@
 
     /* === CHICKEN ENHANCEMENTS === */
     /* Rage mode */
-    body.rage .chickenImage.angry{
+    body.rage .mascotImage.angry{
       display: block;
       animation: rageChicken 0.3s ease-in-out infinite;
       filter: saturate(2) hue-rotate(-20deg) brightness(1.1);
@@ -1762,7 +1920,7 @@
       100%{ transform: scale(1.15) rotate(-2deg); }
     }
     /* Victory dance */
-    body.victory .chickenImage.happy{
+    body.victory .mascotImage.happy{
       display: block;
       animation: victoryDance 1s ease-in-out infinite;
     }
@@ -1776,7 +1934,7 @@
       100%{ transform: translateY(0) scale(1); }
     }
     /* Reaction emojis */
-    .chickenEmoji{
+    .mascotEmoji{
       position: absolute; font-size: 28px; pointer-events: none; z-index: 20;
       animation: emojiFloat 1.2s ease-out forwards;
     }
@@ -1786,7 +1944,7 @@
       100%{ opacity: 0; transform: translate(var(--ex), -80px) scale(0.7); }
     }
     /* Chicken peek from bottom center — stays below content */
-    .chickenPeek{
+    .mascotPeek{
       position: fixed;
       bottom: -160px;
       left: 50%;
@@ -1797,9 +1955,9 @@
       pointer-events: none;
       visibility: hidden;
     }
-    .chickenPeek.loaded{ visibility: visible; }
-    .chickenPeek.visible{ bottom: -70px; }
-    .chickenPeek img{ width: 100%; display: block; transform: none; }
+    .mascotPeek.loaded{ visibility: visible; }
+    .mascotPeek.visible{ bottom: -50px; }
+    .mascotPeek img{ width: 100%; display: block; transform: none; }
 
     /* Timer frozen state */
     .timerBar.frozen{
@@ -1809,7 +1967,7 @@
     }
 
     /* === END SCREEN CHICKEN === */
-    .endScreenChickenWrap{
+    .endScreenMascotWrap{
       width: 100px;
       height: 100px;
       margin: 0 auto 8px;
@@ -1817,19 +1975,19 @@
       overflow: visible;
       position: relative;
     }
-    .endScreenChickenWrap img{
+    .endScreenMascotWrap img{
       width: 100%;
       height: 100%;
       object-fit: contain;
       display: block;
     }
-    .gameOverPopup .endScreenChickenWrap{
+    .gameOverPopup .endScreenMascotWrap{
       animation: rageChickenEnd 0.4s ease-in-out infinite;
     }
-    .gameOverPopup .endScreenChickenWrap img{
+    .gameOverPopup .endScreenMascotWrap img{
       filter: saturate(1.5) hue-rotate(-10deg);
     }
-    .victoryPopup .endScreenChickenWrap{
+    .victoryPopup .endScreenMascotWrap{
       animation: victoryChickenEnd 1s ease-in-out infinite;
     }
     @keyframes rageChickenEnd{
@@ -1854,10 +2012,8 @@
 <body class="wink">
 
   <!-- CHICKEN PEEK (slides in from right) -->
-  <div class="chickenPeek" id="chickenPeek">
-    <img src="https://user-gen-media-assets.s3.amazonaws.com/seedream_images/5e8433c9-0f98-4b40-8646-dcec028601b8.png" alt="" 
-      onload="this.parentElement.classList.add('loaded')" 
-      onerror="this.parentElement.style.display='none'">
+  <div class="mascotPeek" id="mascotPeek">
+    <img src="" alt="" onload="this.parentElement.classList.add('loaded')" onerror="this.parentElement.style.display='none'">
   </div>
 
   <!-- NAME ENTRY SCREEN -->
@@ -1866,7 +2022,29 @@
       <h2>🐔 Hands Please! Quiz</h2>
       <p>Enter your name to join the competition!</p>
       <input type="text" id="playerNameInput" placeholder="Your name..." maxlength="30" />
-      <button class="submitBtn" onclick="goToRules()">Next →</button>
+      <button class="submitBtn" onclick="goToSectionPicker()">Next →</button>
+    </div>
+  </div>
+
+  <!-- SECTION PICKER -->
+  <div class="sectionScreen" id="sectionScreen">
+    <div class="sectionCard">
+      <h2>Choose Your Quiz</h2>
+      <p class="sectionSub" id="sectionGreeting">Pick a section to test your knowledge</p>
+      <div class="sectionBtns" id="sectionBtns">
+        <div class="sectionBtn" onclick="selectSection('breakfast')">
+          <span class="secIcon">🍳</span>
+          <div class="secInfo"><div class="secName">Breakfast</div><div class="secCount" id="countBreakfast">Loading...</div></div>
+        </div>
+        <div class="sectionBtn" onclick="selectSection('brunch')">
+          <span class="secIcon">🥂</span>
+          <div class="secInfo"><div class="secName">Brunch</div><div class="secCount" id="countBrunch">Loading...</div></div>
+        </div>
+        <div class="sectionBtn" onclick="selectSection('dinner')">
+          <span class="secIcon">🍽️</span>
+          <div class="secInfo"><div class="secName">Dinner</div><div class="secCount" id="countDinner">Loading...</div></div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -1912,10 +2090,10 @@
   <!-- MAIN QUIZ -->
   <div class="mainContainer" id="mainContainer" style="display: none;">
 
-    <div class="eggsHUD">
-      <div class="egg" id="egg1"></div>
-      <div class="egg" id="egg2"></div>
-      <div class="egg" id="egg3"></div>
+    <div class="livesHUD" id="livesHUD">
+      <div class="lifeItem" id="life1"></div>
+      <div class="lifeItem" id="life2"></div>
+      <div class="lifeItem" id="life3"></div>
     </div>
 
     <div class="quizCard" id="quizCard">
@@ -1928,10 +2106,10 @@
 
       <div class="quizHeader">
         <!-- Inline eggs for mobile -->
-        <div class="eggsInline" id="eggsInline">
-          <div class="egg" id="eggM1"></div>
-          <div class="egg" id="eggM2"></div>
-          <div class="egg" id="eggM3"></div>
+        <div class="livesInline" id="livesInline">
+          <div class="lifeItem" id="lifeM1"></div>
+          <div class="lifeItem" id="lifeM2"></div>
+          <div class="lifeItem" id="lifeM3"></div>
         </div>
         <span id="streakBadge" class="streakBadge"></span>
         <span id="scoreDisplay">0 pts</span>
@@ -1964,34 +2142,36 @@
       <div class="feedback" id="feedbackText"></div>
     </div>
 
-    <div class="chickenStage" id="chickenStage">
-      <img class="chickenImage happy" id="happyImg" src="https://user-gen-media-assets.s3.amazonaws.com/seedream_images/3e87e01e-4024-482b-a8ff-2413dc23cf56.png" alt="" onerror="this.style.display='none'">
-      <img class="chickenImage angry" id="angryImg" src="https://user-gen-media-assets.s3.amazonaws.com/seedream_images/2036a4c0-36eb-4538-bfd4-94ccb3f03b24.png" alt="" onerror="this.style.display='none'">
-      <img class="chickenImage wink" id="winkImg" src="https://user-gen-media-assets.s3.amazonaws.com/seedream_images/5e8433c9-0f98-4b40-8646-dcec028601b8.png" alt="" onerror="this.style.display='none'">
+    <div class="mascotStage" id="mascotStage">
+      <img class="mascotImage happy" id="happyImg" src="" alt="" onerror="this.style.display='none'">
+      <img class="mascotImage angry" id="angryImg" src="" alt="" onerror="this.style.display='none'">
+      <img class="mascotImage wink" id="winkImg" src="" alt="" onerror="this.style.display='none'">
     </div>
   </div>
 
   <!-- GAME OVER POPUP -->
   <div class="gameOverPopup" id="gameOverPopup">
-    <div class="endScreenChickenWrap" id="gameOverChickenWrap"></div>
+    <div class="endScreenMascotWrap" id="gameOverMascotWrap"></div>
     <h2>Strike 3!</h2>
-    <p>Oh oh! The chicken is NOT happy.</p>
+    <p id="gameOverFlavorText">Oh oh! Not happy.</p>
     <div class="endRank" id="gameOverRank"></div>
     <div class="statsGrid" id="gameOverStats"></div>
     <p>Study hard and try again!</p>
-    <button onclick="location.reload()">Try Again</button>
+    <button onclick="replaySection()">Try Again</button>
+    <button onclick="backToSectionPicker()" style="background: rgba(255,255,255,0.1); color: var(--ink); border: 1px solid rgba(255,255,255,0.15); margin-top: 6px;">Play Another Section</button>
   </div>
 
   <!-- VICTORY POPUP -->
   <div class="victoryPopup" id="victoryPopup">
-    <div class="endScreenChickenWrap" id="victoryChickenWrap"></div>
+    <div class="endScreenMascotWrap" id="victoryMascotWrap"></div>
     <h2>🎉 Quiz Complete!</h2>
     <div class="finalScore" id="finalScore">0 pts</div>
     <div class="endRank" id="victoryRank"></div>
     <div class="statsGrid" id="victoryStats"></div>
     <p id="victoryMessage"></p>
-    <button onclick="location.reload()">Play Again</button>
+    <button onclick="replaySection()">Play Again</button>
     <button onclick="openLeaderboard()" style="background: linear-gradient(135deg, var(--accent), #c9a030); color: var(--bg-deep);">View Leaderboard</button>
+    <button onclick="backToSectionPicker()" style="background: rgba(255,255,255,0.1); color: var(--ink); border: 1px solid rgba(255,255,255,0.15); margin-top: 6px;">Play Another Section</button>
   </div>
 
   <!-- LEADERBOARD BUTTON -->
@@ -2006,6 +2186,11 @@
       <div class="leaderboardHeader">
         <h2>🏆 Leaderboard</h2>
         <button class="btnSecondary" style="background: rgba(255,255,255,0.15); color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-family: inherit; font-weight: 700;" onclick="closeLeaderboard()">Close</button>
+      </div>
+      <div class="adminTabs" id="lbTabs" style="margin-bottom:12px;">
+        <div class="adminTab active" onclick="switchLbTab('breakfast')">🍳 Breakfast</div>
+        <div class="adminTab" onclick="switchLbTab('brunch')">🥂 Brunch</div>
+        <div class="adminTab" onclick="switchLbTab('dinner')">🍽️ Dinner</div>
       </div>
       <div class="leaderboardBody">
         <div class="leaderboardList" id="leaderboardList"></div>
@@ -2022,6 +2207,14 @@
       <div class="adminHeader">
         <h2>Admin Panel</h2>
         <button class="btnSecondary" onclick="closeAdmin()">Close</button>
+      </div>
+      <div style="padding:0 20px 10px; text-align:center;">
+        <label style="color:var(--ink-muted); font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:1px;">Section:</label>
+        <select id="adminSectionSelect" onchange="switchAdminSection()" style="margin-left:8px; padding:8px 14px; border-radius:8px; border:1px solid rgba(255,255,255,0.15); background:rgba(255,255,255,0.05); color:var(--ink); font-family:inherit; font-size:14px; font-weight:700; cursor:pointer;">
+          <option value="breakfast">🍳 Breakfast</option>
+          <option value="brunch">🥂 Brunch</option>
+          <option value="dinner">🍽️ Dinner</option>
+        </select>
       </div>
       <div class="adminTabs">
         <div class="adminTab active" onclick="switchAdminTab('questions')">Questions</div>
@@ -2071,20 +2264,80 @@
     const SUPABASE_URL = "https://beyeqxromrqoiruejddp.supabase.co";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJleWVxeHJvbXJxb2lydWVqZGRwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk5MjcwMDEsImV4cCI6MjA4NTUwMzAwMX0.LIt8CG0DYeQDXE1RhvGPNyjVdK8SarSGuXJJJd2Ku7o";
 
-    const { createClient } = supabase;
-    const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const { createClient } = (typeof supabase !== 'undefined') ? supabase : { createClient: () => null };
+    let sb = null;
+    try { sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY); } catch(e) { console.warn('Supabase init failed:', e); }
 
     const SB_LB_TABLE = "hp_quiz_leaderboard";
     const SB_Q_TABLE  = "hp_quiz_questions";
-    const SB_Q_ID = "main";
 
-    async function sbFetchLeaderboard(limit = 200){
-      const { data, error } = await sb
-        .from(SB_LB_TABLE)
-        .select("id,name,score,total,created_at")
+    // === SECTION CONFIG ===
+    let currentSection = 'breakfast';
+    let currentLbSection = 'breakfast'; // for leaderboard view
+
+    const SECTION_CONFIG = {
+      breakfast: {
+        id: 'breakfast',
+        label: 'Breakfast',
+        icon: '🍳',
+        lifeType: 'img-life',
+        lifeImages: { whole: './egg-whole.jpg', cracked: './egg-cracked.jpg', smashed: './egg-smashed.jpg' },
+        mascot: {
+          happy: ['https://user-gen-media-assets.s3.amazonaws.com/seedream_images/3e87e01e-4024-482b-a8ff-2413dc23cf56.png','https://user-gen-media-assets.s3.amazonaws.com/seedream_images/5cf3e5fe-edb5-4d16-98b8-d45e90eef68e.png','https://user-gen-media-assets.s3.amazonaws.com/seedream_images/b498ce6d-decf-4441-8f26-57074747b8f5.png'],
+          angry: ['https://user-gen-media-assets.s3.amazonaws.com/seedream_images/2036a4c0-36eb-4538-bfd4-94ccb3f03b24.png','https://user-gen-media-assets.s3.amazonaws.com/seedream_images/43f53595-f8e6-49ff-8bdf-7cfa8fb1e359.png','https://user-gen-media-assets.s3.amazonaws.com/seedream_images/bd76b9ab-3a56-49bf-a5e8-6aa9d74a16dd.png'],
+          wink: ['https://user-gen-media-assets.s3.amazonaws.com/seedream_images/5e8433c9-0f98-4b40-8646-dcec028601b8.png','https://user-gen-media-assets.s3.amazonaws.com/seedream_images/37753db4-6856-47fe-9f66-f652f7506e99.png','https://user-gen-media-assets.s3.amazonaws.com/seedream_images/fa393d61-fd60-4e86-9889-d6e25461711f.png']
+        },
+        flavorGameOver: 'Oh oh! The chicken is NOT happy.',
+        emojis: { correct: ['❤️','✨','🌟','💛','🙌'], wrong: ['😤','💢','😠','🤬','💥'], streak: ['🔥','⚡','💯','🌈','✨'], timeout: ['😰','💦','⏰','😓','😬'] }
+      },
+      brunch: {
+        id: 'brunch',
+        label: 'Brunch',
+        icon: '🥂',
+        lifeType: 'img-life',
+        lifeImages: { whole: './mimosa-whole.jpg', cracked: './mimosa-cracked.jpg', smashed: './mimosa-smashed.jpg' },
+        mascot: {
+          happy: ['./brunch-happy.jpg'],
+          angry: ['./brunch-angry.jpg'],
+          wink: ['./brunch-happy.jpg']
+        },
+        flavorGameOver: 'Oh oh! Chef is NOT impressed.',
+        emojis: { correct: ['🥂','✨','🌟','💛','🙌'], wrong: ['😤','💢','😠','🍳','💥'], streak: ['🔥','🥂','💯','✨','⚡'], timeout: ['😰','💦','⏰','😓','😬'] }
+      },
+      dinner: {
+        id: 'dinner',
+        label: 'Dinner',
+        icon: '🍽️',
+        lifeType: 'img-life',
+        lifeImages: { whole: './oyster-whole.jpg', cracked: './oyster-cracked.jpg', smashed: './oyster-smashed.jpg' },
+        mascot: {
+          happy: ['./dinner-happy.jpg'],
+          angry: ['./dinner-angry.jpg'],
+          wink: ['./dinner-happy.jpg']
+        },
+        flavorGameOver: 'The sommelier is disappointed.',
+        emojis: { correct: ['🦪','✨','🌟','🍷','🙌'], wrong: ['😤','💢','😠','🦪','💥'], streak: ['🔥','🍷','💯','✨','⚡'], timeout: ['😰','💦','⏰','😓','😬'] }
+      }
+    };
+
+    function getSectionConfig() { return SECTION_CONFIG[currentSection]; }
+
+    // === SUPABASE FUNCTIONS (section-aware) ===
+    async function sbFetchLeaderboard(limit = 200, section = null){
+      if (!sb) throw new Error('No DB');
+      const sec = section || currentSection;
+      let query = sb.from(SB_LB_TABLE)
+        .select("id,name,score,total,created_at,section")
         .order("score", { ascending: false })
         .order("created_at", { ascending: true })
         .limit(limit);
+      // Filter by section — also include rows without section column (legacy = breakfast)
+      if (sec === 'breakfast') {
+        query = query.or(`section.eq.${sec},section.is.null`);
+      } else {
+        query = query.eq('section', sec);
+      }
+      const { data, error } = await query;
       if(error) throw error;
       return (data || []).map(r => ({
         id: r.id, name: r.name, score: r.score, total: r.total, date: r.created_at
@@ -2092,147 +2345,140 @@
     }
 
     async function sbInsertScore(name, score, total){
-      const { error } = await sb.from(SB_LB_TABLE).insert([{ name, score, total }]);
+      if (!sb) throw new Error('No DB');
+      const { error } = await sb.from(SB_LB_TABLE).insert([{ name, score, total, section: currentSection }]);
       if(error) throw error;
     }
 
     async function sbDeleteScoreById(id){
+      if (!sb) throw new Error('No DB');
       const { error } = await sb.from(SB_LB_TABLE).delete().eq("id", id);
       if(error) throw error;
     }
 
-    async function sbClearAllScores(){
-      const { error } = await sb
-        .from(SB_LB_TABLE)
-        .delete()
-        .neq("id", "00000000-0000-0000-0000-000000000000");
+    async function sbClearAllScores(section){
+      if (!sb) throw new Error('No DB');
+      const sec = section || currentSection;
+      let query = sb.from(SB_LB_TABLE).delete();
+      if (sec === 'breakfast') {
+        query = query.or(`section.eq.${sec},section.is.null`);
+      } else {
+        query = query.eq('section', sec);
+      }
+      const { error } = await query;
       if(error) throw error;
     }
 
-    async function sbLoadQuestions(){
-      const { data, error } = await sb
-        .from(SB_Q_TABLE)
-        .select("questions")
-        .eq("id", SB_Q_ID)
-        .maybeSingle();
-      if(error) throw error;
-      return data?.questions || null;
+    async function sbLoadQuestions(section){
+      if (!sb) throw new Error('No DB');
+      const sec = section || currentSection;
+      // Legacy: breakfast was stored as "main"
+      const ids = sec === 'breakfast' ? ['breakfast', 'main'] : [sec];
+      for (const id of ids) {
+        const { data, error } = await sb.from(SB_Q_TABLE).select("questions").eq("id", id).maybeSingle();
+        if(error) continue;
+        if (data?.questions) return data.questions;
+      }
+      return null;
     }
 
-    async function sbSaveQuestions(questionsArr){
-      const { error } = await sb
-        .from(SB_Q_TABLE)
-        .upsert({ id: SB_Q_ID, questions: questionsArr }, { onConflict: "id" });
+    async function sbSaveQuestions(questionsArr, section){
+      if (!sb) throw new Error('No DB');
+      const sec = section || currentSection;
+      const { error } = await sb.from(SB_Q_TABLE).upsert({ id: sec, questions: questionsArr }, { onConflict: "id" });
       if(error) throw error;
     }
 
-    // === CHICKEN ANIMATION ===
-    const CHICKEN_IMAGES = {
-      happy: [
-        'https://user-gen-media-assets.s3.amazonaws.com/seedream_images/3e87e01e-4024-482b-a8ff-2413dc23cf56.png',
-        'https://user-gen-media-assets.s3.amazonaws.com/seedream_images/5cf3e5fe-edb5-4d16-98b8-d45e90eef68e.png',
-        'https://user-gen-media-assets.s3.amazonaws.com/seedream_images/b498ce6d-decf-4441-8f26-57074747b8f5.png'
-      ],
-      angry: [
-        'https://user-gen-media-assets.s3.amazonaws.com/seedream_images/2036a4c0-36eb-4538-bfd4-94ccb3f03b24.png',
-        'https://user-gen-media-assets.s3.amazonaws.com/seedream_images/43f53595-f8e6-49ff-8bdf-7cfa8fb1e359.png',
-        'https://user-gen-media-assets.s3.amazonaws.com/seedream_images/bd76b9ab-3a56-49bf-a5e8-6aa9d74a16dd.png'
-      ],
-      wink: [
-        'https://user-gen-media-assets.s3.amazonaws.com/seedream_images/5e8433c9-0f98-4b40-8646-dcec028601b8.png',
-        'https://user-gen-media-assets.s3.amazonaws.com/seedream_images/37753db4-6856-47fe-9f66-f652f7506e99.png',
-        'https://user-gen-media-assets.s3.amazonaws.com/seedream_images/fa393d61-fd60-4e86-9889-d6e25461711f.png'
-      ]
-    };
+    async function sbCountQuestions(section) {
+      try {
+        const qs = await sbLoadQuestions(section);
+        return Array.isArray(qs) ? qs.length : 0;
+      } catch { return 0; }
+    }
+
+    // === MASCOT ANIMATION (dynamic per section) ===
+    function getMascotImages() { return getSectionConfig().mascot; }
 
     let currentFrame = 0;
     let animationInterval = null;
 
-    function startChickenAnimation(mood) {
-      stopChickenAnimation();
-      const images = CHICKEN_IMAGES[mood];
+    function startMascotAnimation(mood) {
+      stopMascotAnimation();
+      const images = getMascotImages()[mood];
       if (!images || images.length === 0) return;
       currentFrame = 0;
-      updateChickenFrame(mood);
-      animationInterval = setInterval(() => {
-        currentFrame = (currentFrame + 1) % images.length;
-        updateChickenFrame(mood);
-      }, 200);
+      updateMascotFrame(mood);
+      if (images.length > 1) {
+        animationInterval = setInterval(() => {
+          currentFrame = (currentFrame + 1) % images.length;
+          updateMascotFrame(mood);
+        }, 200);
+      }
     }
 
-    function updateChickenFrame(mood) {
-      const img = document.querySelector(`.chickenImage.${mood}`);
-      if (img) img.src = CHICKEN_IMAGES[mood][currentFrame];
+    function updateMascotFrame(mood) {
+      const img = document.querySelector(`.mascotImage.${mood}`);
+      if (img) img.src = getMascotImages()[mood][currentFrame];
     }
 
-    function stopChickenAnimation() {
+    function stopMascotAnimation() {
       if (animationInterval) { clearInterval(animationInterval); animationInterval = null; }
     }
 
-    function setChickenMood(mood) {
+    let mascotFirstEntry = true;
+
+    function setMascotMood(mood) {
       document.body.className = mood;
-      if (chickenFirstEntry) {
-        chickenFirstEntry = false;
-        const stage = document.querySelector('.chickenStage');
+      if (mascotFirstEntry) {
+        mascotFirstEntry = false;
+        const stage = document.querySelector('.mascotStage');
         if (stage) {
           stage.classList.add('entering');
           stage.addEventListener('animationend', () => stage.classList.remove('entering'), { once: true });
         }
       }
-      startChickenAnimation(mood);
-      
-      // On mobile: briefly show chicken peeking in for reactions
-      const stage = document.querySelector('.chickenStage');
+      startMascotAnimation(mood);
+
+      const stage = document.querySelector('.mascotStage');
       const isMobile = !stage || getComputedStyle(stage).display === 'none';
       if (isMobile && (mood === 'happy' || mood === 'angry' || mood === 'rage' || mood === 'victory')) {
-        showMobileChickenPeek(mood);
+        showMobileMascotPeek(mood);
       }
     }
 
-    // Mobile chicken peek-in for reactions
-    let mobileChickenTimeout = null;
-    function showMobileChickenPeek(mood) {
-      const peek = document.getElementById('chickenPeek');
+    let mobileMascotTimeout = null;
+    function showMobileMascotPeek(mood) {
+      const peek = document.getElementById('mascotPeek');
       if (!peek || !peek.classList.contains('loaded')) return;
-      // Update peek image based on mood
+      const images = getMascotImages();
       const img = peek.querySelector('img');
       if (mood === 'angry' || mood === 'rage') {
-        img.src = CHICKEN_IMAGES.angry[0];
-        if (mood === 'rage') img.style.filter = 'saturate(2) hue-rotate(-20deg) brightness(1.1)';
-        else img.style.filter = '';
+        img.src = images.angry[0];
+        img.style.filter = mood === 'rage' ? 'saturate(2) hue-rotate(-20deg) brightness(1.1)' : '';
       } else {
-        img.src = CHICKEN_IMAGES.happy[0];
+        img.src = images.happy[0];
         img.style.filter = '';
       }
-      clearTimeout(mobileChickenTimeout);
+      clearTimeout(mobileMascotTimeout);
       peek.classList.add('visible');
       const duration = mood === 'victory' ? 4000 : 1500;
-      mobileChickenTimeout = setTimeout(() => peek.classList.remove('visible'), duration);
+      mobileMascotTimeout = setTimeout(() => peek.classList.remove('visible'), duration);
     }
 
-    // === CHICKEN REACTION EMOJIS ===
-    const REACTION_EMOJIS = {
-      correct: ['❤️','✨','🌟','💛','🙌'],
-      wrong: ['😤','💢','😠','🤬','💥'],
-      streak: ['🔥','⚡','💯','🌈','✨'],
-      timeout: ['😰','💦','⏰','😓','😬']
-    };
-
-    function spawnChickenEmoji(type) {
-      const stage = document.querySelector('.chickenStage');
+    function spawnMascotEmoji(type) {
+      const stage = document.querySelector('.mascotStage');
       const isMobile = !stage || getComputedStyle(stage).display === 'none';
       const target = isMobile ? document.getElementById('quizCard') : stage;
       if (!target) return;
-      
-      const emojis = REACTION_EMOJIS[type] || REACTION_EMOJIS.correct;
+
+      const emojis = getReactionEmojis()[type] || getReactionEmojis().correct;
       const count = type === 'streak' ? 3 : 2;
       for (let i = 0; i < count; i++) {
         setTimeout(() => {
           const el = document.createElement('div');
-          el.className = 'chickenEmoji';
+          el.className = 'mascotEmoji';
           el.textContent = emojis[Math.floor(Math.random() * emojis.length)];
           if (isMobile) {
-            // Spawn from top area of card
             el.style.top = '5px';
             el.style.left = (15 + Math.random() * 70) + '%';
             el.style.fontSize = '24px';
@@ -2246,6 +2492,8 @@
         }, i * 200);
       }
     }
+
+    function getReactionEmojis() { return getSectionConfig().emojis; }
 
     // === AUDIO — CHIPTUNE BGM ENGINE ===
     let audioCtx = null;
@@ -2299,7 +2547,6 @@
         osc.stop(startTime + duration + 0.01);
       } catch(e) {}
     }
-
     // ---- Normal BGM: Bouncy chiptune loop (retro platformer feel) ----
     function playNormalBGM() {
       if (!audioCtx) return;
@@ -2536,23 +2783,23 @@
       highlightAnswers(-1, q.a);
       updateStreakDisplay();
       playSound('timeout');
-      setChickenMood('angry');
-      spawnChickenEmoji('timeout');
+      setMascotMood('angry');
+      spawnMascotEmoji('timeout');
 
       // Screen shake
       triggerScreenShake();
 
-      if (strikes <= 3) shatterEgg(document.getElementById('egg' + strikes));
+      if (strikes <= 3) shatterLife(document.getElementById('life' + strikes));
 
       document.getElementById('submitBtn').disabled = true;
       disablePowerUps();
 
       if (strikes >= 3) {
         gameOver = true;
-        setChickenMood('rage');
+        setMascotMood('rage');
         setTimeout(() => finishQuiz(false), 1500);
       } else {
-        setTimeout(() => { currentIdx++; transitionToNextQuestion(); setChickenMood('wink'); }, 2000);
+        setTimeout(() => { currentIdx++; transitionToNextQuestion(); setMascotMood('wink'); }, 2000);
       }
     }
 
@@ -2862,18 +3109,90 @@
     let questionStartTime = 0;
     let editingId = null;
     let playerName = '';
-    let chickenFirstEntry = true;
 
-    // === NAME ENTRY → RULES → START ===
-    function goToRules() {
+    // === FLOW: Name → Section Picker → Rules → Quiz ===
+    function goToSectionPicker() {
       const input = document.getElementById('playerNameInput');
       const name = input.value.trim();
       if (!name) { alert('Please enter your name!'); return; }
-      ensureAudio();
+      try { ensureAudio(); } catch(e) { console.warn('Audio init failed:', e); }
       playerName = name;
       document.getElementById('nameEntryScreen').style.display = 'none';
-      document.getElementById('chickenPeek').classList.remove('visible');
+      document.getElementById('mascotPeek').classList.remove('visible');
+      showSectionPicker();
+    }
+
+    async function showSectionPicker() {
+      document.getElementById('sectionScreen').style.display = 'flex';
+      document.getElementById('sectionGreeting').textContent = `Hey ${playerName}! Pick a section:`;
+      // Load question counts
+      for (const sec of ['breakfast', 'brunch', 'dinner']) {
+        const el = document.getElementById('count' + sec.charAt(0).toUpperCase() + sec.slice(1));
+        if (el) {
+          el.textContent = 'Loading...';
+          const btn = el.closest('.sectionBtn');
+          btn.classList.remove('disabled');
+          try {
+            const count = await sbCountQuestions(sec);
+            if (count > 0) {
+              el.textContent = `${count} questions`;
+            } else if (sec === 'breakfast') {
+              // Breakfast always has defaults
+              el.textContent = 'Ready';
+            } else {
+              el.textContent = 'Coming soon';
+              btn.classList.add('disabled');
+            }
+          } catch {
+            // Supabase unavailable — allow all sections, breakfast has defaults
+            el.textContent = sec === 'breakfast' ? 'Ready' : 'Available';
+          }
+        }
+      }
+    }
+
+    function selectSection(section) {
+      currentSection = section;
+      document.getElementById('sectionScreen').style.display = 'none';
+      setupSectionTheme();
       document.getElementById('rulesScreen').style.display = 'flex';
+    }
+
+    function setupSectionTheme() {
+      const config = getSectionConfig();
+      const images = config.mascot;
+
+      document.getElementById('happyImg').src = images.happy[0];
+      document.getElementById('angryImg').src = images.angry[0];
+      document.getElementById('winkImg').src = images.wink[0];
+
+      // Set peek image — must trigger loaded class for mobile peek to work
+      const peek = document.getElementById('mascotPeek');
+      if (peek) {
+        const peekImg = peek.querySelector('img');
+        peekImg.onload = () => { peek.classList.add('loaded'); };
+        peekImg.onerror = () => { peek.classList.remove('loaded'); };
+        peekImg.src = images.happy[0];
+      }
+
+      // Set life items
+      const lifeType = config.lifeType;
+      const lifeImgs = config.lifeImages;
+      document.querySelectorAll('.lifeItem').forEach(el => {
+        el.className = 'lifeItem ' + lifeType + ' alive-pulse';
+        el.innerHTML = '';
+        el.dataset.state = 'whole';
+        if (lifeType === 'img-life' && lifeImgs) {
+          const img = document.createElement('img');
+          img.src = lifeImgs.whole;
+          img.alt = '';
+          el.appendChild(img);
+        } else if (lifeType === 'mimosa-shape') {
+          el.innerHTML = '<div class="mimosaGlass"></div><div class="mimosaStem"></div><div class="mimosaBase"></div><div class="mimosaBubble"></div><div class="mimosaBubble"></div><div class="mimosaBubble"></div>';
+        } else if (lifeType === 'oyster-shape') {
+          el.innerHTML = '<div class="oysterShell"></div><div class="oysterPearl"></div>';
+        }
+      });
     }
 
     async function startQuizFromRules() {
@@ -2883,17 +3202,38 @@
       await init();
     }
 
+    function replaySection() {
+      document.getElementById('gameOverPopup').style.display = 'none';
+      document.getElementById('victoryPopup').style.display = 'none';
+      document.getElementById('mainContainer').style.display = 'none';
+      setupSectionTheme();
+      document.getElementById('mainContainer').style.display = 'flex';
+      init();
+    }
+
+    function backToSectionPicker() {
+      document.getElementById('gameOverPopup').style.display = 'none';
+      document.getElementById('victoryPopup').style.display = 'none';
+      document.getElementById('mainContainer').style.display = 'none';
+      stopBGM();
+      showSectionPicker();
+    }
+
     // Legacy compat
-    async function startQuiz() { goToRules(); }
+    async function startQuiz() { goToSectionPicker(); }
+    function goToRules() { goToSectionPicker(); }
 
     document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('playerNameInput').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') goToRules();
+        if (e.key === 'Enter') goToSectionPicker();
       });
-      // Chicken peek animation on name entry — rise up, hold, sink back
+      // Mascot peek animation on name entry
       setTimeout(() => {
-        const peek = document.getElementById('chickenPeek');
+        // Set initial peek image (chicken for welcome)
+        const peek = document.getElementById('mascotPeek');
         if (peek) {
+          const img = peek.querySelector('img');
+          img.src = SECTION_CONFIG.breakfast.mascot.wink[0];
           peek.classList.add('visible');
           setTimeout(() => peek.classList.remove('visible'), 3000);
         }
@@ -2903,14 +3243,14 @@
     // === INIT ===
     async function init() {
       try {
-        const remote = await sbLoadQuestions();
+        const remote = await sbLoadQuestions(currentSection);
         if (Array.isArray(remote) && remote.length) questions = remote;
         else {
-          const stored = localStorage.getItem('handsPlease_quiz_v5');
+          const stored = localStorage.getItem('handsPlease_quiz_' + currentSection) || (currentSection === 'breakfast' ? localStorage.getItem('handsPlease_quiz_v5') : null);
           questions = stored ? JSON.parse(stored) : [...DEFAULT_BANK];
         }
       } catch(err) {
-        const stored = localStorage.getItem('handsPlease_quiz_v5');
+        const stored = localStorage.getItem('handsPlease_quiz_' + currentSection) || (currentSection === 'breakfast' ? localStorage.getItem('handsPlease_quiz_v5') : null);
         questions = stored ? JSON.parse(stored) : [...DEFAULT_BANK];
       }
 
@@ -2921,16 +3261,32 @@
       gameOver = false; questionAnswered = false;
       bestStreak = 0; fastestAnswer = Infinity; wrongCount = 0;
 
-      chickenFirstEntry = true;
-      setChickenMood('wink');
+      mascotFirstEntry = true;
+      setMascotMood('wink');
       resetPowerUps();
       document.getElementById('gameOverPopup').style.display = 'none';
       document.getElementById('victoryPopup').style.display = 'none';
-      document.querySelectorAll('.egg').forEach(e => {
-        e.className = 'egg alive-pulse';
-        // Remove any crack remnants
-        e.querySelectorAll('.eggHalf, .eggYolk, .eggWhite, .eggDrip, canvas').forEach(c => c.remove());
+      
+      // Reset lives
+      const config = getSectionConfig();
+      const lifeImgs = config.lifeImages;
+      document.querySelectorAll('.lifeItem').forEach(e => {
+        e.className = 'lifeItem ' + config.lifeType + ' alive-pulse';
+        e.dataset.state = 'whole';
+        e.innerHTML = '';
+        if (config.lifeType === 'img-life' && lifeImgs) {
+          const img = document.createElement('img');
+          img.src = lifeImgs.whole;
+          img.alt = '';
+          e.appendChild(img);
+        } else if (config.lifeType === 'mimosa-shape') {
+          e.innerHTML = '<div class="mimosaGlass"></div><div class="mimosaStem"></div><div class="mimosaBase"></div><div class="mimosaBubble"></div><div class="mimosaBubble"></div><div class="mimosaBubble"></div>';
+        } else if (config.lifeType === 'oyster-shape') {
+          e.innerHTML = '<div class="oysterShell"></div><div class="oysterPearl"></div>';
+        }
+        e.querySelectorAll('.eggHalf, .eggYolk, .eggWhite, .eggDrip, canvas, .mimosaSpill').forEach(c => c.remove());
       });
+
       document.getElementById('scoreDisplay').innerText = '0 pts';
       updateStreakDisplay();
       renderQuestion();
@@ -3039,8 +3395,8 @@
         showScorePopup(pts);
         launchMiniConfetti(10);
         updateStreakDisplay();
-        setChickenMood('happy');
-        spawnChickenEmoji(streak >= 3 ? 'streak' : 'correct');
+        setMascotMood('happy');
+        spawnMascotEmoji(streak >= 3 ? 'streak' : 'correct');
 
         // Switch to power-up music when streak hits 2+
         if (streak >= 2) switchBGM('powerup');
@@ -3053,7 +3409,7 @@
           playSound('correct');
         }
 
-        setTimeout(() => { currentIdx++; transitionToNextQuestion(); setChickenMood('wink'); }, 1500);
+        setTimeout(() => { currentIdx++; transitionToNextQuestion(); setMascotMood('wink'); }, 1500);
 
       } else {
         strikes++;
@@ -3068,45 +3424,44 @@
         fbEl2.innerText = `❌ Wrong! Correct: ${q.c[q.a]}`;
         fbEl2.style.color = 'var(--danger)';
 
-        if (strikes <= 3) shatterEgg(document.getElementById('egg' + strikes));
+        if (strikes <= 3) shatterLife(document.getElementById('life' + strikes));
 
         triggerScreenShake();
         updateStreakDisplay();
-        setChickenMood('angry');
-        spawnChickenEmoji('wrong');
+        setMascotMood('angry');
+        spawnMascotEmoji('wrong');
         playSound('wrong');
 
         if (strikes >= 3) {
           gameOver = true;
-          setChickenMood('rage');
+          setMascotMood('rage');
           setTimeout(() => finishQuiz(false), 1200);
         } else {
-          setTimeout(() => { currentIdx++; transitionToNextQuestion(); setChickenMood('wink'); }, 2000);
+          setTimeout(() => { currentIdx++; transitionToNextQuestion(); setMascotMood('wink'); }, 2000);
         }
       }
     });
 
     // === FINISH ===
-    function injectEndScreenChicken(wrapperId, mood) {
+    function injectEndScreenMascot(wrapperId, mood) {
       const wrap = document.getElementById(wrapperId);
       if (!wrap) return;
-      wrap.innerHTML = ''; // clear previous
+      wrap.innerHTML = '';
+      const images = getMascotImages();
+      const url = mood === 'angry' ? images.angry[0] : images.happy[0];
       const srcImg = mood === 'angry' ? document.getElementById('angryImg') : document.getElementById('happyImg');
-      if (!srcImg || !srcImg.naturalWidth) {
-        // Image didn't load — try using the URL from CHICKEN_IMAGES
-        const url = mood === 'angry' ? CHICKEN_IMAGES.angry[0] : CHICKEN_IMAGES.happy[0];
-        const img = document.createElement('img');
-        img.src = url;
-        img.alt = '';
-        img.onerror = () => { wrap.style.display = 'none'; };
-        wrap.appendChild(img);
-      } else {
-        // Clone the already-loaded image
+      if (srcImg && srcImg.naturalWidth) {
         const clone = srcImg.cloneNode(true);
         clone.className = '';
         clone.style.display = 'block';
         clone.removeAttribute('id');
         wrap.appendChild(clone);
+      } else {
+        const img = document.createElement('img');
+        img.src = url;
+        img.alt = '';
+        img.onerror = () => { wrap.style.display = 'none'; };
+        wrap.appendChild(img);
       }
     }
 
@@ -3118,18 +3473,19 @@
 
       if (strikes >= 3) {
         playSound('gameover');
-        injectEndScreenChicken('gameOverChickenWrap', 'angry');
+        injectEndScreenMascot('gameOverMascotWrap', 'angry');
+        document.getElementById('gameOverFlavorText').textContent = getSectionConfig().flavorGameOver;
         document.getElementById('gameOverRank').innerText = rank;
         document.getElementById('gameOverStats').innerHTML = buildStatsHTML();
         const goPopup = document.getElementById('gameOverPopup');
         goPopup.style.display = 'block';
         goPopup.classList.remove('entering'); void goPopup.offsetWidth;
         goPopup.classList.add('entering');
-        setChickenMood('peck');
+        setMascotMood('peck');
         saveScore(totalPoints, maxPoints);
       } else if (completed) {
         showVictory(rank);
-        setChickenMood('victory');
+        setMascotMood('victory');
         saveScore(totalPoints, maxPoints);
       }
     }
@@ -3138,7 +3494,7 @@
     async function saveScore(score, total) {
       try { await sbInsertScore(playerName, score, total); } catch(err) {
         const leaderboard = getLeaderboard();
-        leaderboard.push({ name: playerName, score, total, date: new Date().toISOString() });
+        leaderboard.push({ name: playerName, score, total, section: currentSection, date: new Date().toISOString() });
         leaderboard.sort((a, b) => b.score - a.score);
         localStorage.setItem('handsPlease_leaderboard', JSON.stringify(leaderboard));
       }
@@ -3150,8 +3506,23 @@
     }
 
     async function openLeaderboard() {
+      currentLbSection = currentSection;
       document.getElementById('leaderboardModal').style.display = 'flex';
+      updateLbTabs();
       await renderLeaderboard();
+    }
+
+    function switchLbTab(section) {
+      currentLbSection = section;
+      updateLbTabs();
+      renderLeaderboard();
+    }
+
+    function updateLbTabs() {
+      const tabs = document.querySelectorAll('#lbTabs .adminTab');
+      tabs.forEach(t => t.classList.remove('active'));
+      const labels = { breakfast: '🍳 Breakfast', brunch: '🥂 Brunch', dinner: '🍽️ Dinner' };
+      tabs.forEach(t => { if (t.textContent.trim() === labels[currentLbSection]) t.classList.add('active'); });
     }
 
     function closeLeaderboard() {
@@ -3164,7 +3535,7 @@
       list.innerHTML = '<div class="emptyLeaderboard"><p>Loading...</p></div>';
 
       let leaderboard = [];
-      try { leaderboard = await sbFetchLeaderboard(50); } catch(err) { leaderboard = getLeaderboard(); }
+      try { leaderboard = await sbFetchLeaderboard(50, currentLbSection); } catch(err) { leaderboard = getLeaderboard().filter(e => e.section === currentLbSection); }
 
       if (!leaderboard || leaderboard.length === 0) {
         list.innerHTML = '<div class="emptyLeaderboard"><p>No scores yet!</p><p>Be the first to complete the quiz!</p></div>';
@@ -3199,18 +3570,38 @@
     }
 
     // === ADMIN ===
+    let adminSection = 'breakfast';
+
     function openAdmin() {
       const password = prompt('Enter admin password:');
       if (password !== ADMIN_PASSWORD) { alert('Incorrect password!'); return; }
       document.getElementById('adminModal').style.display = 'flex';
+      document.getElementById('adminSectionSelect').value = currentSection || 'breakfast';
+      adminSection = currentSection || 'breakfast';
       switchAdminTab('questions');
-      refreshQuestionsList();
+      loadAdminQuestions();
       renderLeaderboardAdmin();
     }
 
     function closeAdmin() {
       document.getElementById('adminModal').style.display = 'none';
       cancelEdit();
+    }
+
+    async function switchAdminSection() {
+      adminSection = document.getElementById('adminSectionSelect').value;
+      await loadAdminQuestions();
+      await renderLeaderboardAdmin();
+    }
+
+    async function loadAdminQuestions() {
+      try {
+        const remote = await sbLoadQuestions(adminSection);
+        if (Array.isArray(remote) && remote.length) questions = remote;
+        else questions = adminSection === 'breakfast' ? [...DEFAULT_BANK] : [];
+      } catch { questions = adminSection === 'breakfast' ? [...DEFAULT_BANK] : []; }
+      questions.forEach((q, i) => { if (!q.id) q.id = 'q' + Date.now() + i; });
+      refreshQuestionsList();
     }
 
     function switchAdminTab(tab) {
@@ -3230,7 +3621,7 @@
       const list = document.getElementById('leaderboardAdminList');
       list.innerHTML = '<div class="emptyLeaderboard"><p>Loading...</p></div>';
       let leaderboard = [];
-      try { leaderboard = await sbFetchLeaderboard(200); } catch(err) { leaderboard = getLeaderboard(); }
+      try { leaderboard = await sbFetchLeaderboard(200, adminSection); } catch(err) { leaderboard = getLeaderboard().filter(e => e.section === adminSection); }
       if (!leaderboard || leaderboard.length === 0) {
         list.innerHTML = '<div class="emptyLeaderboard"><p>No scores yet</p></div>';
         return;
@@ -3260,8 +3651,8 @@
     }
 
     async function clearAllScores() {
-      if (!confirm('Clear ALL scores? This cannot be undone!')) return;
-      try { await sbClearAllScores(); await renderLeaderboardAdmin(); } catch(err) { alert("Clear all failed."); }
+      if (!confirm('Clear ALL scores for ' + adminSection + '? This cannot be undone!')) return;
+      try { await sbClearAllScores(adminSection); await renderLeaderboardAdmin(); } catch(err) { alert("Clear all failed."); }
     }
 
     function refreshQuestionsList() {
@@ -3334,8 +3725,8 @@
       } else {
         questions.push({ id: 'q' + Date.now(), q: qText, c: choices, a: correctIdx });
       }
-      await sbSaveQuestions(questions);
-      localStorage.setItem('handsPlease_quiz_v5', JSON.stringify(questions));
+      await sbSaveQuestions(questions, adminSection);
+      localStorage.setItem('handsPlease_quiz_' + adminSection, JSON.stringify(questions));
       cancelEdit(); refreshQuestionsList();
     }
 
@@ -3351,18 +3742,18 @@
     }
 
     async function resetToDefaults() {
-      if (!confirm('Reset to default questions?')) return;
-      questions = [...DEFAULT_BANK];
-      localStorage.setItem('handsPlease_quiz_v5', JSON.stringify(questions));
-      try { await sbSaveQuestions(questions); } catch(err) {}
-      location.reload();
+      if (!confirm('Reset to default questions for ' + adminSection + '?')) return;
+      questions = adminSection === 'breakfast' ? [...DEFAULT_BANK] : [];
+      localStorage.setItem('handsPlease_quiz_' + adminSection, JSON.stringify(questions));
+      try { await sbSaveQuestions(questions, adminSection); } catch(err) {}
+      refreshQuestionsList();
     }
 
     function exportQuestions() {
       const json = JSON.stringify(questions, null, 2);
       const blob = new Blob([json], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
-      const a = document.createElement('a'); a.href = url; a.download = 'quiz-questions.json'; a.click();
+      const a = document.createElement('a'); a.href = url; a.download = adminSection + '-quiz-questions.json'; a.click();
     }
 
     function importQuestions() {
@@ -3375,8 +3766,8 @@
             const imported = JSON.parse(event.target.result);
             if (!Array.isArray(imported)) { alert('Invalid format'); return; }
             questions = imported;
-            localStorage.setItem('handsPlease_quiz_v5', JSON.stringify(questions));
-            sbSaveQuestions(questions).catch(() => {});
+            localStorage.setItem('handsPlease_quiz_' + adminSection, JSON.stringify(questions));
+            sbSaveQuestions(questions, adminSection).catch(() => {});
             refreshQuestionsList(); alert('Import successful!');
           } catch(err) { alert('Error parsing JSON'); }
         };
@@ -3385,65 +3776,61 @@
       input.click();
     }
 
-    // === EGG SHATTER (Canvas + CSS) ===
-    function shatterEgg(eggEl) {
-      if (!eggEl) return;
-      // Also crack the corresponding mobile egg
-      const id = eggEl.id;
-      const mobileEgg = document.getElementById('eggM' + id.replace('egg', ''));
-      
-      [eggEl, mobileEgg].forEach(el => {
+    // === LIFE SHATTER ===
+    function shatterLife(lifeEl) {
+      if (!lifeEl) return;
+      const id = lifeEl.id;
+      const mobileLife = document.getElementById('lifeM' + id.replace('life', ''));
+      const config = getSectionConfig();
+
+      [lifeEl, mobileLife].forEach(el => {
         if (!el) return;
-        // Phase 1: shake
-        el.classList.add('shattering');
-        setTimeout(() => {
-          el.classList.remove('shattering');
-          el.classList.add('cracked');
-          
-          // Create canvas for crack line + shell fragments
-          const w = el.offsetWidth + 20;
-          const h = el.offsetHeight + 20;
-          const cvs = document.createElement('canvas');
-          cvs.className = 'eggCanvas';
-          cvs.width = w; cvs.height = h;
-          cvs.style.width = w + 'px';
-          cvs.style.height = h + 'px';
-          el.appendChild(cvs);
-          
-          const ctx = cvs.getContext('2d');
-          
-          // Animate crack line drawing
-          drawCrackLine(ctx, w, h);
-          
-          // Shell fragments
-          spawnShellFragments(el);
-          
-          // Yolk + whites (CSS elements)
-          const yolk = document.createElement('div');
-          yolk.className = 'eggYolk';
-          el.appendChild(yolk);
-          
-          const white = document.createElement('div');
-          white.className = 'eggWhite';
-          el.appendChild(white);
-          
-          // Shell halves
-          const topHalf = document.createElement('div');
-          topHalf.className = 'eggHalf top';
-          el.appendChild(topHalf);
-          
-          const bottomHalf = document.createElement('div');
-          bottomHalf.className = 'eggHalf bottom';
-          el.appendChild(bottomHalf);
-          
-          // Drips
-          const dripL = document.createElement('div');
-          dripL.className = 'eggDrip left';
-          el.appendChild(dripL);
-          const dripR = document.createElement('div');
-          dripR.className = 'eggDrip right';
-          el.appendChild(dripR);
-        }, 500);
+
+        if (config.lifeType === 'img-life') {
+          // Image-based life: shake → cracked → smashed
+          const lifeImgs = config.lifeImages;
+          const img = el.querySelector('img');
+          if (!img) return;
+
+          // Phase 1: Shake
+          el.classList.add('shattering');
+          el.classList.remove('alive-pulse');
+
+          setTimeout(() => {
+            el.classList.remove('shattering');
+            // Phase 2: Swap to cracked
+            el.classList.add('cracked');
+            img.src = lifeImgs.cracked;
+
+            setTimeout(() => {
+              // Phase 3: Swap to smashed
+              el.classList.remove('cracked');
+              el.classList.add('smashed');
+              img.src = lifeImgs.smashed;
+            }, 400);
+          }, 500);
+
+        } else {
+          // Legacy CSS-based life (fallback)
+          el.classList.add('shattering');
+          setTimeout(() => {
+            el.classList.remove('shattering');
+            el.classList.add('cracked');
+
+            if (config.lifeType === 'egg-shape') {
+              const w = el.offsetWidth + 20;
+              const h = el.offsetHeight + 20;
+              const cvs = document.createElement('canvas');
+              cvs.className = 'eggCanvas';
+              cvs.width = w; cvs.height = h;
+              cvs.style.cssText = `width:${w}px;height:${h}px;position:absolute;top:-10px;left:-10px;pointer-events:none;z-index:10;`;
+              el.appendChild(cvs);
+              drawCrackLine(cvs.getContext('2d'), w, h);
+              spawnShellFragments(el);
+              el.insertAdjacentHTML('beforeend', '<div class="eggYolk"></div><div class="eggWhite"></div><div class="eggHalf top"></div><div class="eggHalf bottom"></div><div class="eggDrip left"></div><div class="eggDrip right"></div>');
+            }
+          }, 500);
+        }
       });
     }
 
@@ -3589,7 +3976,7 @@
       rankEl.innerText = rank;
       statsEl.innerHTML = buildStatsHTML();
 
-      injectEndScreenChicken('victoryChickenWrap', 'happy');
+      injectEndScreenMascot('victoryMascotWrap', 'happy');
 
       popup.classList.remove('celebrating');
       void popup.offsetWidth;
