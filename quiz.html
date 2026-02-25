@@ -192,6 +192,33 @@
       100%{ transform: translate(30px, 25px) scale(0.5); opacity: 0; }
     }
 
+    /* === IMAGE-BASED LIVES === */
+    .lifeItem.img-life{
+      width: 80px; height: 80px; position: relative; overflow: visible;
+      border-radius: 8px;
+    }
+    .lifeItem.img-life img{
+      width: 100%; height: 100%; object-fit: contain; display: block;
+      transition: opacity 0.3s, transform 0.3s;
+    }
+    .lifeItem.img-life.shattering img{
+      animation: lifeShake 0.5s ease-in-out;
+    }
+    @keyframes lifeShake{
+      0%,100%{ transform: rotate(0) scale(1); }
+      15%{ transform: rotate(8deg) scale(1.05); }
+      30%{ transform: rotate(-8deg) scale(1.05); }
+      45%{ transform: rotate(5deg) scale(1.02); }
+      60%{ transform: rotate(-5deg) scale(1.02); }
+      75%{ transform: rotate(2deg); }
+      90%{ transform: rotate(-2deg); }
+    }
+    .lifeItem.img-life.cracked img{ opacity: 0.85; }
+    .lifeItem.img-life.smashed img{ opacity: 0.5; transform: scale(0.9); }
+
+    /* Inline (mobile) image lives */
+    .livesInline .lifeItem.img-life{ width: 44px; height: 44px; }
+
     /* Inline lives for mobile */
     .livesInline .lifeItem.egg-shape{ width: 36px; height: 44px; border-width: 1.5px; }
     .livesInline .lifeItem.egg-shape::after{ top: 8px; left: 8px; width: 7px; height: 9px; }
@@ -2253,7 +2280,8 @@
         id: 'breakfast',
         label: 'Breakfast',
         icon: '🍳',
-        lifeType: 'egg-shape',
+        lifeType: 'img-life',
+        lifeImages: { whole: './egg-whole.jpg', cracked: './egg-cracked.jpg', smashed: './egg-smashed.jpg' },
         mascot: {
           happy: ['https://user-gen-media-assets.s3.amazonaws.com/seedream_images/3e87e01e-4024-482b-a8ff-2413dc23cf56.png','https://user-gen-media-assets.s3.amazonaws.com/seedream_images/5cf3e5fe-edb5-4d16-98b8-d45e90eef68e.png','https://user-gen-media-assets.s3.amazonaws.com/seedream_images/b498ce6d-decf-4441-8f26-57074747b8f5.png'],
           angry: ['https://user-gen-media-assets.s3.amazonaws.com/seedream_images/2036a4c0-36eb-4538-bfd4-94ccb3f03b24.png','https://user-gen-media-assets.s3.amazonaws.com/seedream_images/43f53595-f8e6-49ff-8bdf-7cfa8fb1e359.png','https://user-gen-media-assets.s3.amazonaws.com/seedream_images/bd76b9ab-3a56-49bf-a5e8-6aa9d74a16dd.png'],
@@ -2266,7 +2294,8 @@
         id: 'brunch',
         label: 'Brunch',
         icon: '🥂',
-        lifeType: 'mimosa-shape',
+        lifeType: 'img-life',
+        lifeImages: { whole: './mimosa-whole.jpg', cracked: './mimosa-cracked.jpg', smashed: './mimosa-smashed.jpg' },
         mascot: {
           happy: ['./brunch-happy.jpg'],
           angry: ['./brunch-angry.jpg'],
@@ -2279,7 +2308,8 @@
         id: 'dinner',
         label: 'Dinner',
         icon: '🍽️',
-        lifeType: 'oyster-shape',
+        lifeType: 'img-life',
+        lifeImages: { whole: './oyster-whole.jpg', cracked: './oyster-cracked.jpg', smashed: './oyster-smashed.jpg' },
         mascot: {
           happy: ['./dinner-happy.jpg'],
           angry: ['./dinner-angry.jpg'],
@@ -2517,7 +2547,6 @@
         osc.stop(startTime + duration + 0.01);
       } catch(e) {}
     }
-
     // ---- Normal BGM: Bouncy chiptune loop (retro platformer feel) ----
     function playNormalBGM() {
       if (!audioCtx) return;
@@ -3131,23 +3160,34 @@
 
     function setupSectionTheme() {
       const config = getSectionConfig();
-      // Set mascot images
       const images = config.mascot;
+
       document.getElementById('happyImg').src = images.happy[0];
       document.getElementById('angryImg').src = images.angry[0];
       document.getElementById('winkImg').src = images.wink[0];
-      // Set peek image
+
+      // Set peek image — must trigger loaded class for mobile peek to work
       const peek = document.getElementById('mascotPeek');
       if (peek) {
         const peekImg = peek.querySelector('img');
-        peekImg.src = images.wink[0];
+        peekImg.onload = () => { peek.classList.add('loaded'); };
+        peekImg.onerror = () => { peek.classList.remove('loaded'); };
+        peekImg.src = images.happy[0];
       }
-      // Set life items shape
+
+      // Set life items
       const lifeType = config.lifeType;
+      const lifeImgs = config.lifeImages;
       document.querySelectorAll('.lifeItem').forEach(el => {
         el.className = 'lifeItem ' + lifeType + ' alive-pulse';
         el.innerHTML = '';
-        if (lifeType === 'mimosa-shape') {
+        el.dataset.state = 'whole';
+        if (lifeType === 'img-life' && lifeImgs) {
+          const img = document.createElement('img');
+          img.src = lifeImgs.whole;
+          img.alt = '';
+          el.appendChild(img);
+        } else if (lifeType === 'mimosa-shape') {
           el.innerHTML = '<div class="mimosaGlass"></div><div class="mimosaStem"></div><div class="mimosaBase"></div><div class="mimosaBubble"></div><div class="mimosaBubble"></div><div class="mimosaBubble"></div>';
         } else if (lifeType === 'oyster-shape') {
           el.innerHTML = '<div class="oysterShell"></div><div class="oysterPearl"></div>';
@@ -3229,10 +3269,17 @@
       
       // Reset lives
       const config = getSectionConfig();
+      const lifeImgs = config.lifeImages;
       document.querySelectorAll('.lifeItem').forEach(e => {
         e.className = 'lifeItem ' + config.lifeType + ' alive-pulse';
+        e.dataset.state = 'whole';
         e.innerHTML = '';
-        if (config.lifeType === 'mimosa-shape') {
+        if (config.lifeType === 'img-life' && lifeImgs) {
+          const img = document.createElement('img');
+          img.src = lifeImgs.whole;
+          img.alt = '';
+          e.appendChild(img);
+        } else if (config.lifeType === 'mimosa-shape') {
           e.innerHTML = '<div class="mimosaGlass"></div><div class="mimosaStem"></div><div class="mimosaBase"></div><div class="mimosaBubble"></div><div class="mimosaBubble"></div><div class="mimosaBubble"></div>';
         } else if (config.lifeType === 'oyster-shape') {
           e.innerHTML = '<div class="oysterShell"></div><div class="oysterPearl"></div>';
@@ -3729,7 +3776,7 @@
       input.click();
     }
 
-    // === LIFE SHATTER (egg / mimosa / oyster) ===
+    // === LIFE SHATTER ===
     function shatterLife(lifeEl) {
       if (!lifeEl) return;
       const id = lifeEl.id;
@@ -3738,55 +3785,52 @@
 
       [lifeEl, mobileLife].forEach(el => {
         if (!el) return;
-        el.classList.add('shattering');
-        setTimeout(() => {
-          el.classList.remove('shattering');
-          el.classList.add('cracked');
 
-          if (config.lifeType === 'egg-shape') {
-            // Egg crack animation
-            const w = el.offsetWidth + 20;
-            const h = el.offsetHeight + 20;
-            const cvs = document.createElement('canvas');
-            cvs.className = 'eggCanvas';
-            cvs.width = w; cvs.height = h;
-            cvs.style.cssText = `width:${w}px;height:${h}px;position:absolute;top:-10px;left:-10px;pointer-events:none;z-index:10;`;
-            el.appendChild(cvs);
-            drawCrackLine(cvs.getContext('2d'), w, h);
-            spawnShellFragments(el);
-            el.insertAdjacentHTML('beforeend', '<div class="eggYolk"></div><div class="eggWhite"></div><div class="eggHalf top"></div><div class="eggHalf bottom"></div><div class="eggDrip left"></div><div class="eggDrip right"></div>');
-          } else if (config.lifeType === 'mimosa-shape') {
-            // Mimosa tip + spill
-            el.insertAdjacentHTML('beforeend', '<div class="mimosaSpill"></div>');
-            // Fizz particles
-            for (let i = 0; i < 8; i++) {
-              const p = document.createElement('div');
-              p.className = 'mimosaFizzParticle';
-              p.style.cssText = `left:${30+Math.random()*40}%;top:${20+Math.random()*40}%;`;
-              const dx = (Math.random()-0.5)*40, dy = -(15+Math.random()*30);
-              p.animate([
-                {transform:'translate(0,0) scale(1)',opacity:0.8},
-                {transform:`translate(${dx}px,${dy}px) scale(0)`,opacity:0}
-              ],{duration:600+Math.random()*400,easing:'ease-out',fill:'forwards'});
-              el.appendChild(p);
-              setTimeout(()=>p.remove(),1100);
+        if (config.lifeType === 'img-life') {
+          // Image-based life: shake → cracked → smashed
+          const lifeImgs = config.lifeImages;
+          const img = el.querySelector('img');
+          if (!img) return;
+
+          // Phase 1: Shake
+          el.classList.add('shattering');
+          el.classList.remove('alive-pulse');
+
+          setTimeout(() => {
+            el.classList.remove('shattering');
+            // Phase 2: Swap to cracked
+            el.classList.add('cracked');
+            img.src = lifeImgs.cracked;
+
+            setTimeout(() => {
+              // Phase 3: Swap to smashed
+              el.classList.remove('cracked');
+              el.classList.add('smashed');
+              img.src = lifeImgs.smashed;
+            }, 400);
+          }, 500);
+
+        } else {
+          // Legacy CSS-based life (fallback)
+          el.classList.add('shattering');
+          setTimeout(() => {
+            el.classList.remove('shattering');
+            el.classList.add('cracked');
+
+            if (config.lifeType === 'egg-shape') {
+              const w = el.offsetWidth + 20;
+              const h = el.offsetHeight + 20;
+              const cvs = document.createElement('canvas');
+              cvs.className = 'eggCanvas';
+              cvs.width = w; cvs.height = h;
+              cvs.style.cssText = `width:${w}px;height:${h}px;position:absolute;top:-10px;left:-10px;pointer-events:none;z-index:10;`;
+              el.appendChild(cvs);
+              drawCrackLine(cvs.getContext('2d'), w, h);
+              spawnShellFragments(el);
+              el.insertAdjacentHTML('beforeend', '<div class="eggYolk"></div><div class="eggWhite"></div><div class="eggHalf top"></div><div class="eggHalf bottom"></div><div class="eggDrip left"></div><div class="eggDrip right"></div>');
             }
-          } else if (config.lifeType === 'oyster-shape') {
-            // Oyster snap + pearl roll (handled by CSS)
-            // Add crumble particles
-            for (let i = 0; i < 5; i++) {
-              const p = document.createElement('div');
-              p.style.cssText = `position:absolute;width:${3+Math.random()*4}px;height:${2+Math.random()*3}px;background:rgba(180,170,155,0.4);border-radius:30%;top:${40+Math.random()*20}%;left:${20+Math.random()*60}%;z-index:15;pointer-events:none;`;
-              const dx = (Math.random()-0.5)*30, dy = 10+Math.random()*20;
-              p.animate([
-                {transform:'translate(0,0) rotate(0)',opacity:0.7},
-                {transform:`translate(${dx}px,${dy}px) rotate(${Math.random()*180}deg)`,opacity:0}
-              ],{duration:700,easing:'ease-out',fill:'forwards'});
-              el.appendChild(p);
-              setTimeout(()=>p.remove(),800);
-            }
-          }
-        }, 500);
+          }, 500);
+        }
       });
     }
 
