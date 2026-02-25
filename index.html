@@ -1,0 +1,1883 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hands Please</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/@supabase/supabase-js@2.48.0/dist/umd/supabase.js"></script>
+  <!-- pdf.js for syllabus PDF parsing -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <style>
+    :root {
+      --bg:           #080d1a;
+      --surface:      #0c1425;
+      --card:         #101928;
+      --card-raised:  #131f33;
+      --border:       rgba(201, 168, 76, 0.13);
+      --border-mid:   rgba(201, 168, 76, 0.28);
+      --gold:         #c9a84c;
+      --gold-light:   #dbbe72;
+      --gold-dim:     rgba(201, 168, 76, 0.07);
+      --text:         #ede8dc;
+      --text-sub:     #8fa3b8;
+      --text-muted:   #4e6070;
+      --danger:       #d95f5f;
+      --success:      #4ade80;
+      --radius-sm:    6px;
+      --radius-md:    10px;
+      --radius-lg:    14px;
+      --shadow-card:  0 8px 32px rgba(0, 0, 0, 0.5);
+      --shadow-modal: 0 24px 72px rgba(0, 0, 0, 0.75);
+      --font-display: 'Playfair Display', Georgia, serif;
+      --font-body:    'Inter', system-ui, sans-serif;
+      --ease:         0.2s ease;
+    }
+
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: var(--font-body);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 2.75rem 1.5rem 0;
+      text-align: center;
+      position: relative;
+    }
+
+    .header-wordmark {
+      font-family: var(--font-display);
+      font-size: 2.8rem;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+      color: var(--text);
+      line-height: 1.1;
+    }
+
+    .header-sub {
+      font-size: 0.68rem;
+      font-weight: 500;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-top: 0.55rem;
+    }
+
+    .header-ornament {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.6rem;
+      margin: 1rem auto 0;
+      width: 100px;
+    }
+
+    .header-ornament::before,
+    .header-ornament::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--gold);
+      opacity: 0.35;
+    }
+
+    .header-ornament-diamond {
+      width: 5px;
+      height: 5px;
+      background: var(--gold);
+      opacity: 0.6;
+      transform: rotate(45deg);
+      flex-shrink: 0;
+    }
+
+    .header-copy {
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      letter-spacing: 0.1em;
+      margin-top: 0.8rem;
+    }
+
+    .admin-left {
+      position: absolute;
+      top: 1.1rem;
+      left: 1.25rem;
+    }
+
+    .quiz-right {
+      position: absolute;
+      top: 1.1rem;
+      right: 1.25rem;
+    }
+
+    .header-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.42rem 0.85rem;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-mid);
+      background: transparent;
+      color: var(--text-sub);
+      font-family: var(--font-body);
+      font-size: 0.75rem;
+      font-weight: 500;
+      letter-spacing: 0.05em;
+      text-decoration: none;
+      cursor: pointer;
+      transition: border-color var(--ease), color var(--ease);
+    }
+
+    .header-btn:hover { border-color: var(--gold); color: var(--gold); }
+
+    .tabs {
+      display: flex;
+      justify-content: center;
+      gap: 0;
+      margin-top: 1.5rem;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scroll-behavior: smooth;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+
+    .tabs::-webkit-scrollbar { display: none; }
+
+    .tab-btn {
+      padding: 0.7rem 2.25rem;
+      border: none;
+      background: transparent;
+      color: var(--text-sub);
+      font-family: var(--font-body);
+      font-size: 0.75rem;
+      font-weight: 500;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      position: relative;
+      bottom: -1px;
+      transition: color var(--ease), border-color var(--ease);
+      flex-shrink: 0;
+      white-space: nowrap;
+    }
+
+    .tab-btn:hover { color: var(--text); }
+    .tab-btn.active { color: var(--gold); border-bottom-color: var(--gold); }
+
+    .container {
+      max-width: 1220px;
+      margin: 0 auto;
+      padding: 1.75rem 1.5rem 3.5rem;
+    }
+
+    .admin-banner {
+      display: none;
+      margin-bottom: 1.25rem;
+      padding: 0.65rem 1rem;
+      border-radius: var(--radius-sm);
+      background: rgba(201, 168, 76, 0.06);
+      color: var(--gold-light);
+      border: 1px solid var(--border-mid);
+      font-size: 0.78rem;
+      letter-spacing: 0.02em;
+    }
+
+    .admin-mode .admin-banner { display: block; }
+
+    .search-bar {
+      margin-bottom: 1rem;
+      position: relative;
+    }
+
+    .search-bar input {
+      width: 100%;
+      padding: 0.75rem 1rem 0.75rem 2.65rem;
+      font-family: var(--font-body);
+      font-size: 0.875rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      background: var(--card);
+      color: var(--text);
+      outline: none;
+      transition: border-color var(--ease), background var(--ease);
+    }
+
+    .search-bar input::placeholder { color: var(--text-muted); }
+    .search-bar input:focus { border-color: var(--border-mid); background: var(--card-raised); }
+
+    .search-icon {
+      position: absolute;
+      left: 0.85rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      pointer-events: none;
+      font-size: 1rem;
+      font-style: normal;
+    }
+
+    .filters {
+      display: flex;
+      gap: 0.45rem;
+      margin-bottom: 1.75rem;
+      flex-wrap: wrap;
+    }
+
+    .filter-btn {
+      padding: 0.32rem 0.75rem;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text-sub);
+      border-radius: 999px;
+      cursor: pointer;
+      font-family: var(--font-body);
+      font-size: 0.72rem;
+      font-weight: 500;
+      letter-spacing: 0.05em;
+      transition: border-color var(--ease), color var(--ease), background var(--ease);
+    }
+
+    .filter-btn:hover { border-color: var(--border-mid); color: var(--text); }
+    .filter-btn.active { background: var(--gold-dim); border-color: var(--gold); color: var(--gold); }
+
+    .menu-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1.25rem;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      cursor: pointer;
+      position: relative;
+      transition: transform var(--ease), box-shadow var(--ease), border-color var(--ease);
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-card);
+      border-color: var(--border-mid);
+    }
+
+    .card::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--gold), transparent);
+      opacity: 0;
+      transition: opacity var(--ease);
+    }
+
+    .card:hover::after { opacity: 1; }
+
+    .card-image {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+      display: block;
+      background: var(--card-raised);
+    }
+
+    .card-image-placeholder {
+      width: 100%;
+      height: 200px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--card-raised);
+      color: var(--text-muted);
+      font-family: var(--font-display);
+      font-size: 0.9rem;
+      letter-spacing: 0.05em;
+      text-align: center;
+      padding: 1rem;
+    }
+
+    .card-content { padding: 1.1rem 1.3rem 1.3rem; }
+
+    .card-title {
+      font-family: var(--font-display);
+      font-size: 1.15rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      color: var(--text);
+      line-height: 1.3;
+    }
+
+    .dietary-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.3rem;
+      margin-bottom: 0.65rem;
+    }
+
+    .dietary-tag {
+      padding: 0.14rem 0.52rem;
+      border-radius: 999px;
+      font-size: 0.65rem;
+      font-weight: 600;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      border: 1px solid rgba(201, 168, 76, 0.28);
+      color: var(--gold);
+      background: var(--gold-dim);
+    }
+
+    .card-preview {
+      color: var(--text-sub);
+      font-size: 0.82rem;
+      line-height: 1.55;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .admin-chip {
+      position: absolute;
+      top: 0.65rem;
+      left: 0.65rem;
+      background: rgba(201, 168, 76, 0.88);
+      color: #080d1a;
+      padding: 0.12rem 0.55rem;
+      font-size: 0.62rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      border-radius: 999px;
+      display: none;
+      align-items: center;
+      gap: 0.3rem;
+    }
+
+    .admin-mode .admin-chip { display: inline-flex; }
+
+    .drag-handle {
+      cursor: grab;
+      font-size: 0.85rem;
+      opacity: 0.8;
+    }
+
+    .drag-handle:active { cursor: grabbing; }
+
+    .modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(4, 7, 15, 0.88);
+      z-index: 1000;
+      overflow-y: auto;
+      padding: 2rem 1rem;
+      backdrop-filter: blur(6px);
+    }
+
+    .modal.active { display: flex; justify-content: center; align-items: flex-start; }
+
+    .modal-content {
+      background: var(--surface);
+      border: 1px solid var(--border-mid);
+      border-radius: var(--radius-lg);
+      max-width: 860px;
+      width: 100%;
+      margin: auto;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: var(--shadow-modal);
+    }
+
+    .modal-close {
+      position: sticky;
+      top: 1rem;
+      float: right;
+      margin: 1rem 1rem 0 0;
+      background: var(--card-raised);
+      border: 1px solid var(--border-mid);
+      color: var(--text-sub);
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      font-size: 1.25rem;
+      line-height: 34px;
+      text-align: center;
+      cursor: pointer;
+      z-index: 10;
+      transition: border-color var(--ease), color var(--ease);
+    }
+
+    .modal-close:hover { border-color: var(--gold); color: var(--gold); }
+
+    .modal-image {
+      width: 100%;
+      height: 280px;
+      object-fit: cover;
+      display: block;
+    }
+
+    .modal-body { padding: 2rem 2.25rem 2.5rem; clear: both; }
+
+    .modal-title {
+      font-family: var(--font-display);
+      font-size: 2rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      color: var(--text);
+      line-height: 1.2;
+    }
+
+    .section { margin-bottom: 1.75rem; }
+
+    .section-title {
+      font-size: 0.65rem;
+      font-weight: 600;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 0.75rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .section-content { color: var(--text-sub); line-height: 1.75; }
+    .section-content ul { list-style: none; padding: 0; }
+
+    .section-content li {
+      padding: 0.3rem 0 0.3rem 1.25rem;
+      position: relative;
+      font-size: 0.9rem;
+    }
+
+    .section-content li::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: var(--gold);
+      opacity: 0.6;
+    }
+
+    .modification-item {
+      background: var(--card);
+      border: 1px solid var(--border);
+      padding: 0.65rem 0.9rem;
+      border-radius: var(--radius-sm);
+      margin-bottom: 0.45rem;
+      font-size: 0.875rem;
+    }
+
+    .available   { color: var(--success); font-weight: 500; }
+    .not-available { color: var(--danger); font-weight: 500; }
+
+    .info-box {
+      background: var(--gold-dim);
+      border: 1px solid var(--border-mid);
+      border-left: 3px solid var(--gold);
+      border-radius: var(--radius-sm);
+      padding: 1rem 1.15rem;
+      font-size: 0.9rem;
+      color: var(--text-sub);
+      line-height: 1.75;
+    }
+
+    .admin-floating {
+      position: fixed;
+      bottom: 1.25rem;
+      right: 1.25rem;
+      display: none;
+      flex-direction: column;
+      gap: 0.5rem;
+      z-index: 1100;
+    }
+
+    .admin-mode .admin-floating { display: flex; }
+
+    .admin-btn {
+      border: none;
+      padding: 0.55rem 1.1rem;
+      border-radius: 999px;
+      cursor: pointer;
+      font-family: var(--font-body);
+      font-size: 0.78rem;
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      transition: background var(--ease), color var(--ease);
+    }
+
+    .admin-btn-primary { background: var(--gold); color: #080d1a; }
+    .admin-btn-primary:hover { background: var(--gold-light); }
+
+    .admin-btn-danger {
+      background: var(--card-raised);
+      color: var(--danger);
+      border: 1px solid rgba(217, 95, 95, 0.3);
+    }
+
+    .admin-btn-danger:hover { background: rgba(217, 95, 95, 0.1); }
+
+    /* === NEW: Upload PDF button style === */
+    .admin-btn-upload {
+      background: var(--card-raised);
+      color: var(--gold);
+      border: 1px solid var(--border-mid);
+    }
+    .admin-btn-upload:hover { background: var(--gold-dim); }
+
+    .editor-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(4, 7, 15, 0.88);
+      z-index: 1200;
+      overflow-y: auto;
+      padding: 1.5rem 0.75rem;
+      backdrop-filter: blur(6px);
+    }
+
+    .editor-modal.active { display: flex; justify-content: center; align-items: flex-start; }
+
+    .editor-content {
+      background: var(--surface);
+      border: 1px solid var(--border-mid);
+      border-radius: var(--radius-lg);
+      max-width: 900px;
+      width: 100%;
+      margin: auto;
+      padding: 1.5rem 1.5rem 1.75rem;
+      box-shadow: var(--shadow-modal);
+    }
+
+    .editor-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      padding-bottom: 0.85rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .editor-title {
+      font-family: var(--font-display);
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .editor-close-btn {
+      border: 1px solid var(--border-mid);
+      background: transparent;
+      font-size: 1.2rem;
+      cursor: pointer;
+      color: var(--text-sub);
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: border-color var(--ease), color var(--ease);
+    }
+
+    .editor-close-btn:hover { border-color: var(--gold); color: var(--gold); }
+
+    .editor-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+      gap: 1.25rem;
+      margin-top: 0.5rem;
+    }
+
+    .form-group { margin-bottom: 0.75rem; }
+
+    .form-group label {
+      display: block;
+      font-size: 0.68rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 0.3rem;
+      color: var(--text-muted);
+    }
+
+    .form-group input[type="text"],
+    .form-group textarea,
+    .form-group select {
+      width: 100%;
+      padding: 0.5rem 0.65rem;
+      font-family: var(--font-body);
+      font-size: 0.85rem;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--text);
+      outline: none;
+      transition: border-color var(--ease);
+      appearance: none;
+      -webkit-appearance: none;
+    }
+
+    .form-group select {
+      background-image: url("image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%234e6070' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 0.65rem center;
+      padding-right: 2rem;
+    }
+
+    .form-group input:focus,
+    .form-group textarea:focus,
+    .form-group select:focus { border-color: var(--border-mid); }
+
+    .form-group textarea { min-height: 80px; resize: vertical; }
+
+    .checkbox-row { display: flex; flex-wrap: wrap; gap: 0.4rem 0.9rem; }
+
+    .checkbox-row label {
+      font-weight: 400;
+      font-size: 0.8rem;
+      text-transform: none;
+      letter-spacing: 0;
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+      color: var(--text-sub);
+      cursor: pointer;
+    }
+
+    .list-editor {
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      padding: 0.5rem;
+      max-height: 210px;
+      overflow-y: auto;
+      background: var(--card);
+    }
+
+    .list-row { display: flex; gap: 0.35rem; margin-bottom: 0.35rem; }
+
+    .list-row input {
+      flex: 1;
+      padding: 0.4rem 0.5rem;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      font-family: var(--font-body);
+      font-size: 0.8rem;
+      background: var(--card-raised);
+      color: var(--text);
+      outline: none;
+      transition: border-color var(--ease);
+    }
+
+    .list-row input:focus { border-color: var(--border-mid); }
+
+    .list-row button {
+      border: 1px solid rgba(217, 95, 95, 0.3);
+      background: transparent;
+      color: var(--danger);
+      border-radius: var(--radius-sm);
+      padding: 0.25rem 0.45rem;
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: background var(--ease);
+    }
+
+    .list-row button:hover { background: rgba(217, 95, 95, 0.1); }
+
+    .list-add-btn {
+      margin-top: 0.35rem;
+      border: 1px dashed var(--border-mid);
+      background: transparent;
+      color: var(--gold);
+      border-radius: 999px;
+      padding: 0.25rem 0.75rem;
+      font-size: 0.76rem;
+      font-family: var(--font-body);
+      cursor: pointer;
+      transition: background var(--ease);
+    }
+
+    .list-add-btn:hover { background: var(--gold-dim); }
+
+    .mod-row {
+      display: grid;
+      grid-template-columns: 0.7fr 0.45fr 1.3fr auto;
+      gap: 0.35rem;
+      margin-bottom: 0.35rem;
+    }
+
+    .mod-row input,
+    .mod-row select {
+      padding: 0.35rem 0.45rem;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      font-family: var(--font-body);
+      font-size: 0.78rem;
+      background: var(--card-raised);
+      color: var(--text);
+      outline: none;
+      appearance: none;
+      -webkit-appearance: none;
+    }
+
+    .editor-actions {
+      margin-top: 1rem;
+      display: flex;
+      justify-content: space-between;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      padding-top: 0.85rem;
+      border-top: 1px solid var(--border);
+    }
+
+    .btn {
+      border-radius: 999px;
+      border: none;
+      padding: 0.5rem 1.15rem;
+      font-family: var(--font-body);
+      font-size: 0.8rem;
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      cursor: pointer;
+      transition: background var(--ease), color var(--ease), border-color var(--ease);
+    }
+
+    .btn-primary { background: var(--gold); color: #080d1a; }
+    .btn-primary:hover { background: var(--gold-light); }
+
+    .btn-secondary {
+      background: var(--card-raised);
+      color: var(--text-sub);
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover { border-color: var(--border-mid); color: var(--text); }
+
+    .btn-danger {
+      background: transparent;
+      color: var(--danger);
+      border: 1px solid rgba(217, 95, 95, 0.3);
+    }
+
+    .btn-danger:hover { background: rgba(217, 95, 95, 0.08); }
+
+    .small-hint { font-size: 0.7rem; color: var(--text-muted); margin-top: 0.2rem; }
+
+    /* === NEW: PDF pending review styles === */
+    .pdf-progress-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(4, 7, 15, 0.92);
+      z-index: 1300;
+      justify-content: center;
+      align-items: center;
+      backdrop-filter: blur(6px);
+    }
+    .pdf-progress-overlay.active { display: flex; }
+    .pdf-progress-box {
+      background: var(--surface);
+      border: 1px solid var(--border-mid);
+      border-radius: var(--radius-lg);
+      padding: 2rem 2.5rem;
+      text-align: center;
+      max-width: 400px;
+      width: 90%;
+    }
+    .pdf-progress-box h3 {
+      font-family: var(--font-display);
+      font-size: 1.2rem;
+      margin-bottom: 1rem;
+      color: var(--text);
+    }
+    .pdf-progress-bar {
+      width: 100%;
+      height: 8px;
+      background: var(--card);
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 0.75rem;
+    }
+    .pdf-progress-fill {
+      height: 100%;
+      background: var(--gold);
+      border-radius: 4px;
+      width: 0%;
+      transition: width 0.3s;
+    }
+    .pdf-progress-text {
+      font-size: 0.8rem;
+      color: var(--text-sub);
+    }
+
+    .pending-badge {
+      position: absolute;
+      top: 0.65rem;
+      right: 0.65rem;
+      background: rgba(217, 150, 50, 0.9);
+      color: #080d1a;
+      padding: 0.15rem 0.6rem;
+      font-size: 0.6rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      border-radius: 999px;
+    }
+
+    .pending-actions {
+      display: flex;
+      gap: 0.4rem;
+      padding: 0.5rem 1.3rem 1rem;
+    }
+
+    .pending-actions .btn { font-size: 0.72rem; padding: 0.35rem 0.85rem; }
+
+    @media (max-width: 900px) {
+      .editor-grid { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 768px) {
+      .menu-grid { grid-template-columns: 1fr; }
+      .modal-body { padding: 1.25rem 1.25rem 1.5rem; }
+      .header-wordmark { font-size: 2rem; }
+      .modal-title { font-size: 1.5rem; }
+    }
+
+    @media (max-width: 480px) {
+      .tab-btn { padding: 0.65rem 1.25rem; }
+      .admin-left, .quiz-right { top: 0.85rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <button class="header-btn admin-left" onclick="handleAdminButtonClick()">Admin</button>
+    <a class="header-btn quiz-right" href="./quiz.html" target="_blank" rel="noopener">Menu Quiz</a>
+    <div class="header-wordmark">Hands Please</div>
+    <div class="header-sub">Food Reference Guide</div>
+    <div class="header-ornament"><span class="header-ornament-diamond"></span></div>
+    <div class="header-copy">&copy; 2026 K Iyer &nbsp;&middot;&nbsp; Internal training tool only</div>
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="breakfast" onclick="switchTab('breakfast')">Breakfast</button>
+      <button class="tab-btn" data-tab="brunch" onclick="switchTab('brunch')">Brunch</button>
+      <button class="tab-btn" data-tab="lunch" onclick="switchTab('lunch')">Lunch</button>
+      <button class="tab-btn" data-tab="dinner" onclick="switchTab('dinner')">Dinner</button>
+      <button class="tab-btn" data-tab="drinks" onclick="switchTab('drinks')">Drinks</button>
+    </div>
+  </div>
+
+  <div class="container">
+    <div id="adminBanner" class="admin-banner">
+      <strong>Admin mode</strong> &mdash; Changes sync to Supabase in real time. Tap any card to edit.
+    </div>
+    <div class="search-bar">
+      <span class="search-icon">&#9906;</span>
+      <input type="text" id="searchInput" placeholder="Search by name, ingredient&hellip;">
+    </div>
+    <div id="foodFilters" class="filters">
+      <button class="filter-btn active" data-filter="all" onclick="setFoodFilter('all')">All Dishes</button>
+      <button class="filter-btn" data-filter="vegan" onclick="setFoodFilter('vegan')">Vegan</button>
+      <button class="filter-btn" data-filter="vegetarian" onclick="setFoodFilter('vegetarian')">Vegetarian</button>
+      <button class="filter-btn" data-filter="gluten-free" onclick="setFoodFilter('gluten-free')">Gluten Free</button>
+      <button class="filter-btn" data-filter="dairy-free" onclick="setFoodFilter('dairy-free')">Dairy Free</button>
+      <button class="filter-btn" data-filter="shellfish" onclick="setFoodFilter('shellfish')">Shellfish</button>
+      <button class="filter-btn" data-filter="fin-fish" onclick="setFoodFilter('fin-fish')">Fin Fish</button>
+      <button class="filter-btn" data-filter="pork" onclick="setFoodFilter('pork')">Pork</button>
+      <button class="filter-btn" data-filter="alcohol" onclick="setFoodFilter('alcohol')">Alcohol</button>
+      <button class="filter-btn" data-filter="onion-garlic" onclick="setFoodFilter('onion-garlic')">Onion / Garlic</button>
+    </div>
+    <div id="contentGrid" class="menu-grid"></div>
+  </div>
+
+  <div class="modal" id="detailModal">
+    <div class="modal-content">
+      <button class="modal-close" onclick="closeDetailModal()">&times;</button>
+      <div id="modalInner"></div>
+    </div>
+  </div>
+
+  <div class="editor-modal" id="editorModal">
+    <div class="editor-content">
+      <div class="editor-header">
+        <div>
+          <div class="editor-title" id="editorTitle"></div>
+          <div class="small-hint" id="editorHint"></div>
+        </div>
+        <button class="editor-close-btn" onclick="closeEditor()">×</button>
+      </div>
+      <div id="editorBody"></div>
+    </div>
+  </div>
+
+  <!-- NEW: PDF parsing progress overlay -->
+  <div class="pdf-progress-overlay" id="pdfProgressOverlay">
+    <div class="pdf-progress-box">
+      <h3>Parsing Syllabus PDF</h3>
+      <div class="pdf-progress-bar"><div class="pdf-progress-fill" id="pdfProgressFill"></div></div>
+      <div class="pdf-progress-text" id="pdfProgressText">Initializing...</div>
+    </div>
+  </div>
+
+  <div class="admin-floating" id="adminControls">
+    <button class="admin-btn admin-btn-primary" onclick="openAddItem()">+ Add dish</button>
+    <!-- NEW: Upload Syllabus PDF button -->
+    <button class="admin-btn admin-btn-upload" onclick="triggerPdfUpload()">📄 Upload Syllabus PDF</button>
+    <input type="file" id="pdfFileInput" accept=".pdf" style="display:none" onchange="handlePdfUpload(event)">
+    <button class="admin-btn admin-btn-danger" onclick="logoutAdmin()">Exit admin</button>
+  </div>
+
+  <script>
+    const SUPABASE_URL = "https://beyeqxromrqoiruejddp.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJleWVxeHJvbXJxb2lydWVqZGRwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk5MjcwMDEsImV4cCI6MjA4NTUwMzAwMX0.LIt8CG0DYeQDXE1RhvGPNyjVdK8SarSGuXJJJd2Ku7o";
+
+    const { createClient } = window.supabase;
+    const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    let foodItems = [];
+    let currentTab = "breakfast";
+    let isAdmin = false;
+    let foodFilter = "all";
+    let searchTerm = "";
+    let editorState = { id: null, category: null };
+    let dragSrcId = null;
+
+    // NEW: Pending dishes from PDF upload (not yet approved)
+    let pendingDishes = [];
+
+    function savePendingToStorage() {
+      try { localStorage.setItem('hp_pending_dishes', JSON.stringify(pendingDishes)); } catch(e) {}
+    }
+    function loadPendingFromStorage() {
+      try {
+        const stored = localStorage.getItem('hp_pending_dishes');
+        if (stored) pendingDishes = JSON.parse(stored);
+      } catch(e) { pendingDishes = []; }
+    }
+    loadPendingFromStorage();
+
+    async function loadFood() {
+      const { data, error } = await supabaseClient
+        .from("food_items")
+        .select("*")
+        .order("sort_order", { ascending: true })
+        .order("created_at", { ascending: true });
+
+      if (error) {
+        console.error("Error loading food_items", error);
+        alert("Error loading dishes from Supabase.");
+        return;
+      }
+
+      foodItems = (data || []).map(row => ({
+        id:              row.id,
+        name:            row.name || "",
+        image:           row.image_url || "",
+        category:        row.category || "breakfast",
+        dietaries:       row.dietaries ? row.dietaries.split(",").map(s => s.trim()).filter(Boolean) : [],
+        ingredients:     row.ingredients   ? row.ingredients.split("\n")   : [],
+        miseEnPlace:     row.mise_en_place ? row.mise_en_place.split("\n") : [],
+        modifications:   row.modifications ? safeParseJSON(row.modifications, []) : [],
+        interestingInfo: row.interesting_info || "",
+        sortOrder:       row.sort_order ?? 0
+      }));
+      renderGrid();
+    }
+
+    function safeParseJSON(str, fallback) {
+      try {
+        const v = JSON.parse(str);
+        return (Array.isArray(v) || typeof v === "object") ? v : fallback;
+      } catch { return fallback; }
+    }
+
+    function getItemById(id) {
+      return foodItems.find(item => item.id === id) || null;
+    }
+
+    function escapeHtml(str) {
+      return String(str || "")
+        .replace(/&/g, "&amp;").replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    }
+
+    function formatDietary(d) {
+      if (!d) return "";
+      return d.split("-").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
+    }
+
+    function syncAdminMode() {
+      document.body.classList.toggle("admin-mode", isAdmin);
+      document.getElementById("adminBanner").style.display = isAdmin ? "block" : "none";
+    }
+
+    function switchTab(tab) {
+      currentTab = tab;
+      document.querySelectorAll(".tab-btn").forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.tab === tab);
+      });
+      const activeBtn = document.querySelector(`.tab-btn[data-tab="${tab}"]`);
+      if (activeBtn) activeBtn.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+      renderGrid();
+    }
+
+    function setFoodFilter(filter) {
+      foodFilter = filter;
+      document.querySelectorAll("#foodFilters .filter-btn").forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.filter === filter);
+      });
+      renderGrid();
+    }
+
+    document.getElementById("searchInput").addEventListener("input", e => {
+      searchTerm = e.target.value.trim().toLowerCase();
+      renderGrid();
+    });
+
+    function renderGrid() {
+      const grid = document.getElementById("contentGrid");
+      let items = foodItems.filter(d => (d.category || "breakfast") === currentTab);
+
+      if (foodFilter !== "all") {
+        items = items.filter(d => d.dietaries && d.dietaries.includes(foodFilter));
+      }
+
+      if (searchTerm) {
+        items = items.filter(item => {
+          const haystack = [
+            item.name || "",
+            ...(item.ingredients || []),
+            ...(item.miseEnPlace || []),
+            item.interestingInfo || "",
+            ...(item.dietaries || [])
+          ];
+          return haystack.join(" ").toLowerCase().includes(searchTerm);
+        });
+      }
+
+      // NEW: Render pending dishes for this tab (admin only)
+      let pendingHtml = '';
+      if (isAdmin) {
+        const tabPending = pendingDishes.filter(d => d.category === currentTab);
+        if (tabPending.length) {
+          pendingHtml = tabPending.map((dish, idx) => `
+            <div class="card" style="border-color: rgba(217, 150, 50, 0.4);" data-pending-idx="${idx}">
+              <span class="pending-badge">Pending Review</span>
+              ${dish.image
+                ? `<img src="${dish.image}" alt="${escapeHtml(dish.name)}" class="card-image" onerror="this.style.display='none'">`
+                : `<div class="card-image-placeholder">${escapeHtml(dish.name)}</div>`
+              }
+              <div class="card-content">
+                <h3 class="card-title">${escapeHtml(dish.name)}</h3>
+                <p class="card-preview">${escapeHtml(dish.interestingInfo || dish.ingredients.join(', ').substring(0, 100))}</p>
+              </div>
+              <div class="pending-actions">
+                <button class="btn btn-primary" onclick="approvePendingDish(${idx}); event.stopPropagation();">✓ Approve</button>
+                <button class="btn btn-secondary" onclick="editPendingDish(${idx}); event.stopPropagation();">Edit</button>
+                <button class="btn btn-danger" onclick="deletePendingDish(${idx}); event.stopPropagation();">✕ Delete</button>
+              </div>
+            </div>
+          `).join('');
+        }
+      }
+
+      if (!items.length && !pendingHtml) {
+        grid.innerHTML = '<p style="grid-column:1/-1;text-align:center;color:var(--text-muted);padding:3rem 0;font-size:0.9rem;letter-spacing:0.05em;">No dishes found.</p>';
+        syncAdminMode();
+        return;
+      }
+
+      const approvedHtml = items.map(item => `
+        <div class="card"
+             onclick="handleCardClick('${item.id}')"
+             draggable="${isAdmin}"
+             data-id="${item.id}"
+             ondragstart="onDragStart(event)"
+             ondragover="onDragOver(event)"
+             ondrop="onDrop(event)"
+             ondragend="onDragEnd(event)">
+          <div class="admin-chip">
+            <span class="drag-handle" onclick="event.stopPropagation()">&#9776;</span>
+            Edit
+          </div>
+          ${item.image
+            ? `<img src="${item.image}" alt="${escapeHtml(item.name)}" class="card-image" onerror="this.style.display='none'">`
+            : `<div class="card-image-placeholder">${escapeHtml(item.name)}</div>`
+          }
+          <div class="card-content">
+            <h3 class="card-title">${item.name || ""}</h3>
+            <div class="dietary-tags">
+              ${(item.dietaries || []).map(d => `<span class="dietary-tag">${formatDietary(d)}</span>`).join("")}
+            </div>
+            <p class="card-preview">${item.interestingInfo || ""}</p>
+          </div>
+        </div>
+      `).join("");
+
+      grid.innerHTML = pendingHtml + approvedHtml;
+      syncAdminMode();
+    }
+
+    // ── Drag & drop ─────────────────────────────────────────────
+    function onDragStart(e) {
+      if (!isAdmin) return;
+      dragSrcId = e.currentTarget.dataset.id;
+      e.currentTarget.style.opacity = "0.45";
+      e.dataTransfer.effectAllowed = "move";
+    }
+
+    function onDragOver(e) {
+      if (!isAdmin) return;
+      e.preventDefault();
+      e.dataTransfer.dropEffect = "move";
+      e.currentTarget.style.outline = "2px solid var(--gold)";
+    }
+
+    function onDragEnd(e) {
+      e.currentTarget.style.opacity = "";
+      e.currentTarget.style.outline = "";
+      document.querySelectorAll(".card").forEach(c => c.style.outline = "");
+    }
+
+    async function onDrop(e) {
+      e.preventDefault();
+      const dropTargetId = e.currentTarget.dataset.id;
+      e.currentTarget.style.outline = "";
+      if (!dragSrcId || dragSrcId === dropTargetId) return;
+
+      const tabItems = foodItems.filter(d => d.category === currentTab);
+      const others   = foodItems.filter(d => d.category !== currentTab);
+
+      const srcIdx  = tabItems.findIndex(i => i.id === dragSrcId);
+      const destIdx = tabItems.findIndex(i => i.id === dropTargetId);
+      if (srcIdx === -1 || destIdx === -1) return;
+
+      const [moved] = tabItems.splice(srcIdx, 1);
+      tabItems.splice(destIdx, 0, moved);
+      tabItems.forEach((item, i) => { item.sortOrder = i; });
+      foodItems = [...others, ...tabItems];
+
+      renderGrid();
+
+      await Promise.all(
+        tabItems.map(item =>
+          supabaseClient.from("food_items").update({ sort_order: item.sortOrder }).eq("id", item.id)
+        )
+      );
+    }
+
+    // ── Card click ──────────────────────────────────────────────
+    function handleCardClick(id) {
+      if (isAdmin) {
+        openEditorById(id);
+      } else {
+        openDetailModalById(id);
+      }
+    }
+
+    // ── Detail modal ────────────────────────────────────────────
+    function openDetailModalById(id) {
+      const item = getItemById(id);
+      if (!item) return;
+      const modal = document.getElementById("detailModal");
+      const inner = document.getElementById("modalInner");
+
+      inner.innerHTML = `
+        ${item.image ? `<img src="${item.image}" alt="${escapeHtml(item.name)}" class="modal-image" onerror="this.style.display='none'">` : ""}
+        <div class="modal-body">
+          <h2 class="modal-title">${item.name || ""}</h2>
+          <div class="dietary-tags" style="margin-bottom:1.25rem;">
+            ${(item.dietaries || []).map(d => `<span class="dietary-tag">${formatDietary(d)}</span>`).join("")}
+          </div>
+          <div class="section">
+            <h3 class="section-title">Mise en Place</h3>
+            <div class="section-content">
+              <ul>${(item.miseEnPlace || []).map(x => `<li>${x}</li>`).join("")}</ul>
+            </div>
+          </div>
+          <div class="section">
+            <h3 class="section-title">Ingredients</h3>
+            <div class="section-content">
+              <ul>${(item.ingredients || []).map(x => `<li>${x}</li>`).join("")}</ul>
+            </div>
+          </div>
+          <div class="section">
+            <h3 class="section-title">Dietary Modifications</h3>
+            <div class="section-content">
+              ${(item.modifications || []).map(mod => `
+                <div class="modification-item">
+                  <strong>${mod.dietary || ""}:</strong>
+                  <span class="${mod.available ? "available" : "not-available"}">
+                    ${mod.available ? "Available" : "Not Available"}
+                  </span><br>
+                  <small>${mod.note || ""}</small>
+                </div>
+              `).join("")}
+            </div>
+          </div>
+          <div class="section">
+            <h3 class="section-title">Interesting Information</h3>
+            <div class="info-box">${item.interestingInfo || ""}</div>
+          </div>
+        </div>
+      `;
+      modal.classList.add("active");
+      document.body.style.overflow = "hidden";
+    }
+
+    function closeDetailModal() {
+      document.getElementById("detailModal").classList.remove("active");
+      document.body.style.overflow = "auto";
+    }
+
+    document.getElementById("detailModal").addEventListener("click", e => {
+      if (e.target.id === "detailModal") closeDetailModal();
+    });
+
+    // ── Admin auth ──────────────────────────────────────────────
+    function handleAdminButtonClick() {
+      if (isAdmin) {
+        logoutAdmin();
+      } else {
+        const pwd = prompt("Enter admin password:");
+        if (pwd === "Iworkfortips") {
+          isAdmin = true;
+          document.body.classList.add("admin-mode");
+          renderGrid();
+        } else if (pwd !== null) {
+          alert("Incorrect password");
+        }
+      }
+    }
+
+    function logoutAdmin() {
+      isAdmin = false;
+      document.body.classList.remove("admin-mode");
+      renderGrid();
+    }
+
+    // ── Editor ──────────────────────────────────────────────────
+    function openAddItem() {
+      openEditorById(null);
+    }
+
+    function openEditorById(id) {
+      const isNew  = id === null || id === undefined;
+      const modal  = document.getElementById("editorModal");
+      const bodyEl = document.getElementById("editorBody");
+
+      document.getElementById("editorTitle").textContent = isNew ? "Add Dish" : "Edit Dish";
+      document.getElementById("editorHint").textContent  = "Saved to Supabase (cloud) so all devices see the same data.";
+
+      const item = isNew ? createEmptyItem() : structuredClone(getItemById(id));
+      editorState.id       = isNew ? null : item.id;
+      editorState.category = item.category || currentTab;
+
+      bodyEl.innerHTML = renderFoodEditor(item);
+      initFoodEditor(item);
+
+      modal.classList.add("active");
+      document.body.style.overflow = "hidden";
+    }
+
+    function closeEditor() {
+      document.getElementById("editorModal").classList.remove("active");
+      document.body.style.overflow = "auto";
+    }
+
+    function createEmptyItem() {
+      return {
+        id: null,
+        name: "",
+        image: "",
+        category: currentTab,
+        dietaries: [],
+        ingredients: [""],
+        miseEnPlace: [""],
+        modifications: [
+          { dietary: "Vegan",         available: false, note: "" },
+          { dietary: "Vegetarian",    available: false, note: "" },
+          { dietary: "Gluten-Free",   available: false, note: "" },
+          { dietary: "Dairy-Free",    available: false, note: "" },
+          { dietary: "Nut Allergies", available: true,  note: "No nuts in dish" },
+          { dietary: "Shellfish",     available: false, note: "" },
+          { dietary: "Fin Fish",      available: false, note: "" },
+          { dietary: "Pork",          available: false, note: "" },
+          { dietary: "Alcohol",       available: false, note: "" },
+          { dietary: "Onion/Garlic",  available: false, note: "" }
+        ],
+        interestingInfo: "",
+        sortOrder: 0
+      };
+    }
+
+    function renderFoodEditor(item) {
+      return `
+      <div class="editor-grid">
+        <div>
+          <div class="form-group">
+            <label>Dish name</label>
+            <input type="text" id="foodName" value="${escapeHtml(item.name || "")}">
+          </div>
+          <div class="form-group">
+            <label>Category</label>
+            <select id="foodCategory">
+              <option value="breakfast" ${(editorState.category||"breakfast")==="breakfast"?"selected":""}>Breakfast</option>
+              <option value="brunch"    ${(editorState.category||"breakfast")==="brunch"   ?"selected":""}>Brunch</option>
+              <option value="lunch"     ${(editorState.category||"breakfast")==="lunch"    ?"selected":""}>Lunch</option>
+              <option value="dinner"    ${(editorState.category||"breakfast")==="dinner"   ?"selected":""}>Dinner</option>
+              <option value="drinks"    ${(editorState.category||"breakfast")==="drinks"   ?"selected":""}>Drinks</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Image</label>
+            <input type="text" id="foodImage" value="${escapeHtml(item.image || "")}" placeholder="Paste image URL, or upload a file below">
+            <input type="file" id="foodImageFile" accept="image/*" style="margin-top:0.35rem;">
+            <div class="small-hint">Uploading a file will replace the URL above automatically.</div>
+          </div>
+          <div class="form-group">
+            <label>Dietaries / allergens</label>
+            <div class="checkbox-row">
+              ${["vegan","vegetarian","gluten-free","dairy-free","nut-free","shellfish","fin-fish","pork","alcohol","onion-garlic"].map(d => `
+                <label>
+                  <input type="checkbox" class="foodDietary" value="${d}" ${item.dietaries && item.dietaries.includes(d) ? "checked" : ""}>
+                  ${formatDietary(d)}
+                </label>
+              `).join("")}
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Interesting information / talking points</label>
+            <textarea id="foodInfo">${escapeHtml(item.interestingInfo || "")}</textarea>
+          </div>
+        </div>
+        <div>
+          <div class="form-group">
+            <label>Mise en place (one line per bullet)</label>
+            <div class="list-editor" id="foodMepList"></div>
+            <button type="button" class="list-add-btn" onclick="addListRow('foodMepList')">+ Add line</button>
+          </div>
+          <div class="form-group">
+            <label>Ingredients (one line per bullet)</label>
+            <div class="list-editor" id="foodIngList"></div>
+            <button type="button" class="list-add-btn" onclick="addListRow('foodIngList')">+ Add ingredient</button>
+          </div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Dietary modifications</label>
+        <div class="list-editor" id="foodModList"></div>
+        <button type="button" class="list-add-btn" onclick="addModRow()">+ Add modification</button>
+      </div>
+      <div class="editor-actions">
+        <div>
+          <button class="btn btn-primary" onclick="saveFoodItem()">Save</button>
+          <button class="btn btn-secondary" onclick="closeEditor()">Cancel</button>
+        </div>
+        <div>
+          ${editorState.id ? '<button class="btn btn-danger" onclick="deleteCurrentItem()">Delete dish</button>' : ""}
+        </div>
+      </div>`;
+    }
+
+    function initFoodEditor(item) {
+      renderListEditor(document.getElementById("foodMepList"), item.miseEnPlace || [""]);
+      renderListEditor(document.getElementById("foodIngList"), item.ingredients  || [""]);
+      renderModEditor(document.getElementById("foodModList"),  item.modifications || []);
+    }
+
+    function renderListEditor(container, items) {
+      if (!items || !items.length) items = [""];
+      container.innerHTML = items.map((val, idx) => `
+        <div class="list-row">
+          <input type="text" value="${escapeHtml(val)}" data-index="${idx}">
+          <button type="button" onclick="removeListRow('${container.id}', ${idx})">✕</button>
+        </div>
+      `).join("");
+    }
+
+    function addListRow(containerId) {
+      const container = document.getElementById(containerId);
+      const rowCount  = container.querySelectorAll(".list-row").length;
+      const div = document.createElement("div");
+      div.className = "list-row";
+      div.innerHTML = `
+        <input type="text" value="" data-index="${rowCount}">
+        <button type="button" onclick="removeListRow('${containerId}', ${rowCount})">✕</button>
+      `;
+      container.appendChild(div);
+    }
+
+    function removeListRow(containerId, index) {
+      const container = document.getElementById(containerId);
+      const rows = Array.from(container.querySelectorAll(".list-row"));
+      if (rows[index]) rows[index].remove();
+    }
+
+    function collectListValues(containerId) {
+      const container = document.getElementById(containerId);
+      return Array.from(container.querySelectorAll(".list-row input"))
+        .map(i => i.value.trim())
+        .filter(Boolean);
+    }
+
+    function renderModEditor(container, mods) {
+      if (!mods || !mods.length) mods = [];
+      container.innerHTML = mods.map((mod, idx) => `
+        <div class="mod-row">
+          <input type="text" data-mod-field="dietary" value="${escapeHtml(mod.dietary || "")}" placeholder="Dietary">
+          <select data-mod-field="available">
+            <option value="true"  ${mod.available ? "selected" : ""}>Available</option>
+            <option value="false" ${!mod.available ? "selected" : ""}>Not Available</option>
+          </select>
+          <input type="text" data-mod-field="note" value="${escapeHtml(mod.note || "")}" placeholder="Note">
+          <button type="button" onclick="removeModRow(${idx})">✕</button>
+        </div>
+      `).join("");
+    }
+
+    function addModRow() {
+      const container = document.getElementById("foodModList");
+      const idx = container.querySelectorAll(".mod-row").length;
+      const div = document.createElement("div");
+      div.className = "mod-row";
+      div.innerHTML = `
+        <input type="text" data-mod-field="dietary" value="" placeholder="Dietary">
+        <select data-mod-field="available">
+          <option value="true">Available</option>
+          <option value="false" selected>Not Available</option>
+        </select>
+        <input type="text" data-mod-field="note" value="" placeholder="Note">
+        <button type="button" onclick="removeModRow(${idx})">✕</button>
+      `;
+      container.appendChild(div);
+    }
+
+    function removeModRow(index) {
+      const container = document.getElementById("foodModList");
+      const rows = Array.from(container.querySelectorAll(".mod-row"));
+      if (rows[index]) rows[index].remove();
+    }
+
+    function collectModValues() {
+      const container = document.getElementById("foodModList");
+      const rows = Array.from(container.querySelectorAll(".mod-row"));
+      const mods = [];
+      rows.forEach(row => {
+        const inputs = row.querySelectorAll("[data-mod-field]");
+        const mod = {};
+        inputs.forEach(el => {
+          const field = el.dataset.modField;
+          mod[field] = field === "available" ? el.value === "true" : el.value.trim();
+        });
+        if (mod.dietary) mods.push(mod);
+      });
+      return mods;
+    }
+
+    async function saveFoodItem() {
+      const name = document.getElementById("foodName").value.trim();
+      if (!name) { alert("Dish name is required"); return; }
+
+      const imageField = document.getElementById("foodImage");
+      const fileInput  = document.getElementById("foodImageFile");
+      const info       = document.getElementById("foodInfo").value.trim();
+      const category   = document.getElementById("foodCategory").value || editorState.category || "breakfast";
+
+      const dietaries     = Array.from(document.querySelectorAll(".foodDietary:checked")).map(cb => cb.value);
+      const miseEnPlace   = collectListValues("foodMepList");
+      const ingredients   = collectListValues("foodIngList");
+      const modifications = collectModValues();
+
+      let imageUrl = imageField.value.trim();
+
+      const file = fileInput.files && fileInput.files[0];
+      if (file) {
+        const fileExt    = file.name.split(".").pop();
+        const uniqueName = `${crypto.randomUUID()}.${fileExt}`;
+        const {  uploadData, error: uploadError } = await supabaseClient.storage
+          .from("menu-images")
+          .upload(uniqueName, file, { cacheControl: "3600", upsert: false });
+
+       
+if (uploadError) {
+  alert("Image upload failed: " + (uploadError?.message || uploadError?.error || JSON.stringify(uploadError)));
+  return;
+        }
+
+        imageUrl = `${SUPABASE_URL}/storage/v1/object/public/menu-images/${uniqueName}`;
+      }
+
+      let sortOrder = 0;
+      if (!editorState.id) {
+        const catItems = foodItems.filter(i => i.category === category);
+        sortOrder = catItems.length > 0 ? Math.max(...catItems.map(i => i.sortOrder)) + 1 : 0;
+      }
+
+      const row = {
+        name,
+        image_url:        imageUrl || null,
+        category,
+        dietaries:        dietaries.join(","),
+        ingredients:      ingredients.join("\n"),
+        mise_en_place:    miseEnPlace.join("\n"),
+        modifications:    JSON.stringify(modifications),
+        interesting_info: info,
+        ...(!editorState.id ? { sort_order: sortOrder } : {})
+      };
+
+      let error;
+      if (editorState.id) {
+        const { error: upError } = await supabaseClient
+          .from("food_items").update(row).eq("id", editorState.id);
+        error = upError;
+      } else {
+        const {  insertData, error: inError } = await supabaseClient
+          .from("food_items").insert(row).select("id").single();
+        error = inError;
+        if (!error && insertData) editorState.id = insertData.id;
+      }
+
+      if (error) { console.error(error); alert("Error saving dish: " + error.message); return; }
+
+      // NEW: If this was a pending dish edit, remove it from pending
+      if (editorState._pendingIdx !== undefined) {
+        pendingDishes.splice(editorState._pendingIdx, 1);
+        savePendingToStorage();
+        delete editorState._pendingIdx;
+      }
+
+      closeEditor();
+      await loadFood();
+    }
+
+    async function deleteCurrentItem() {
+      if (!editorState.id) return;
+      if (!confirm("Delete this dish?")) return;
+
+      const { error } = await supabaseClient
+        .from("food_items").delete().eq("id", editorState.id);
+
+      if (error) { console.error(error); alert("Error deleting dish: " + error.message); return; }
+
+      closeEditor();
+      await loadFood();
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // NEW: PDF SYLLABUS UPLOAD & PARSING
+    // ═══════════════════════════════════════════════════════════
+
+    function triggerPdfUpload() {
+      document.getElementById('pdfFileInput').click();
+    }
+
+    async function handlePdfUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      event.target.value = ''; // reset so same file can be re-uploaded
+
+      const overlay = document.getElementById('pdfProgressOverlay');
+      const fill = document.getElementById('pdfProgressFill');
+      const text = document.getElementById('pdfProgressText');
+      overlay.classList.add('active');
+      fill.style.width = '0%';
+      text.textContent = 'Loading PDF...';
+
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+        const totalPages = pdf.numPages;
+        const parsed = [];
+
+        for (let i = 1; i <= totalPages; i++) {
+          fill.style.width = `${Math.round((i / totalPages) * 100)}%`;
+          text.textContent = `Parsing page ${i} of ${totalPages}...`;
+
+          const page = await pdf.getPage(i);
+
+          // Extract text
+          const textContent = await page.getTextContent();
+          const pageText = textContent.items.map(item => item.str).join('\n');
+
+          // Skip non-dish pages
+          if (pageText.includes('Common Allergy Guide') || pageText.includes('Glossary of Seasonal')) {
+            continue;
+          }
+
+          // Check if this looks like a dish page
+          if (!(/mise\s*en\s*place/i.test(pageText)) && !pageText.includes('Ingredients')) {
+            continue;
+          }
+
+          // Parse the text into structured dish data
+          const dish = parseDishText(pageText);
+          if (!dish || !dish.name) continue;
+
+          // Extract dish image by rendering page to canvas
+          let imageUrl = '';
+          try {
+            imageUrl = await extractDishImage(page, dish.name);
+          } catch (imgErr) {
+            console.warn('Image extraction failed for', dish.name, imgErr);
+          }
+
+          dish.image = imageUrl;
+          dish.category = currentTab;
+          parsed.push(dish);
+        }
+
+        overlay.classList.remove('active');
+
+        if (!parsed.length) {
+          alert('No dishes could be parsed from this PDF.');
+          return;
+        }
+
+        // Add to pending dishes
+        pendingDishes = pendingDishes.concat(parsed);
+        savePendingToStorage();
+        renderGrid();
+        alert(`${parsed.length} dishes parsed and ready for review. Scroll up to see pending cards.`);
+
+      } catch (err) {
+        overlay.classList.remove('active');
+        console.error('PDF parsing error:', err);
+        alert('Error parsing PDF: ' + err.message);
+      }
+    }
+
+    function parseDishText(rawText) {
+      // Reconstruct lines — pdf.js gives us individual text items
+      // Group them back into logical lines
+      const text = rawText.replace(/\n{3,}/g, '\n\n');
+      const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+
+      if (lines.length < 3) return null;
+
+      // 1. Dish name = first non-empty line
+      const name = lines[0];
+
+      // 2. Description = lines between name and Mise en Place / Allergy
+      const descLines = [];
+      let miseIdx = -1;
+      let allergyIdx = -1;
+      for (let i = 1; i < lines.length; i++) {
+        if (/mise\s*en\s*place/i.test(lines[i])) { miseIdx = i; break; }
+        if (/^Allergy:/i.test(lines[i])) { allergyIdx = i; break; }
+        descLines.push(lines[i]);
+      }
+
+      // 3. Mise en Place
+      let mise = '';
+      if (miseIdx !== -1) {
+        mise = lines[miseIdx].replace(/mise\s*en\s*place\s*:/i, '').trim();
+        // Continue collecting until Allergy: line
+        for (let i = miseIdx + 1; i < lines.length; i++) {
+          if (/^Allergy:/i.test(lines[i]) || /^Additional Facts/i.test(lines[i])) break;
+          mise += ' ' + lines[i];
+        }
+      }
+
+      // 4. Allergy modifications
+      const allergyKeys = ['Vegetarian', 'Vegan', 'Dairy', 'Gluten', 'Nuts', 'Shellfish', 'Fin Fish', 'Pork', 'Alcohol', 'Onion/Garlic'];
+      const modifications = [];
+
+      for (const key of allergyKeys) {
+        let found = false;
+        for (const line of lines) {
+          const pattern = new RegExp('^' + key.replace('/', '\\/') + '[:\\s]', 'i');
+          if (pattern.test(line)) {
+            const noteText = line.replace(pattern, '').trim();
+            const isAvailable = /^(none|no |as is|gluten free)/i.test(noteText);
+            const canBe = /^(can be|yes|remove)/i.test(noteText);
+            modifications.push({
+              dietary: key,
+              available: isAvailable || canBe,
+              note: noteText
+            });
+            found = true;
+            break;
+          }
+        }
+        if (!found) {
+          modifications.push({ dietary: key, available: false, note: '' });
+        }
+      }
+
+      // 5. Derive dietary tags from modifications
+      const dietaries = [];
+      const dietaryMap = {
+        'Vegan': 'vegan', 'Vegetarian': 'vegetarian', 'Gluten': 'gluten-free',
+        'Dairy': 'dairy-free', 'Nuts': 'nut-free', 'Shellfish': 'shellfish',
+        'Fin Fish': 'fin-fish', 'Pork': 'pork', 'Alcohol': 'alcohol',
+        'Onion/Garlic': 'onion-garlic'
+      };
+      for (const mod of modifications) {
+        if (mod.available && dietaryMap[mod.dietary]) {
+          dietaries.push(dietaryMap[mod.dietary]);
+        }
+      }
+
+      // 6. Ingredients
+      let ingredients = '';
+      for (let i = 0; i < lines.length; i++) {
+        if (/ingredients\s*\/?\s*item\s*description/i.test(lines[i])) {
+          const afterColon = lines[i].split(':').slice(1).join(':').trim();
+          const ingLines = [afterColon];
+          for (let j = i + 1; j < lines.length; j++) {
+            ingLines.push(lines[j]);
+          }
+          ingredients = ingLines.join(' ').trim();
+          break;
+        }
+      }
+
+      return {
+        name: name,
+        description: descLines.join(' ').trim(),
+        image: '',
+        category: currentTab,
+        dietaries: dietaries,
+        ingredients: ingredients ? ingredients.split(',').map(s => s.trim()).filter(Boolean) : [],
+        miseEnPlace: mise.trim() ? mise.trim().split(',').map(s => s.trim()).filter(Boolean) : [],
+        modifications: modifications,
+        interestingInfo: '',
+        sortOrder: 0
+      };
+    }
+
+    async function extractDishImage(page, dishName) {
+      // Render the page to a canvas at a reasonable scale
+      const viewport = page.getViewport({ scale: 1.5 });
+      const canvas = document.createElement('canvas');
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+      const ctx = canvas.getContext('2d');
+
+      await page.render({ canvasContext: ctx, viewport: viewport }).promise;
+
+      // The dish image is typically the 2nd image on the page
+      // It sits roughly in the left portion of the slide, below the header
+      // Header is ~81px tall at scale 1, so ~122px at 1.5x
+      // Dish image area: roughly x=0 to x=55% of width, y=15% to y=75% of height
+      const cropX = 0;
+      const cropY = Math.round(viewport.height * 0.15);
+      const cropW = Math.round(viewport.width * 0.4);
+      const cropH = Math.round(viewport.height * 0.65);
+
+      // Create a cropped canvas
+      const cropCanvas = document.createElement('canvas');
+      cropCanvas.width = cropW;
+      cropCanvas.height = cropH;
+      const cropCtx = cropCanvas.getContext('2d');
+      cropCtx.drawImage(canvas, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH);
+
+      // Convert to blob
+      const blob = await new Promise(resolve => cropCanvas.toBlob(resolve, 'image/jpeg', 0.8));
+      if (!blob) return '';
+
+      // Upload to Supabase Storage
+      const uniqueName = `pdf-${crypto.randomUUID()}.jpg`;
+      const { error: uploadError } = await supabaseClient.storage
+        .from('menu-images')
+        .upload(uniqueName, blob, { cacheControl: '3600', upsert: false });
+
+      if (uploadError) {
+        console.warn('Image upload failed:', uploadError);
+        return '';
+      }
+
+      return `${SUPABASE_URL}/storage/v1/object/public/menu-images/${uniqueName}`;
+    }
+
+    // ── Pending dish actions ────────────────────────────────────
+    async function approvePendingDish(idx) {
+      const dish = pendingDishes[idx];
+      if (!dish) return;
+
+      // Calculate sort order
+      const catItems = foodItems.filter(i => i.category === dish.category);
+      const sortOrder = catItems.length > 0 ? Math.max(...catItems.map(i => i.sortOrder)) + 1 : 0;
+
+      const row = {
+        name:             dish.name,
+        image_url:        dish.image || null,
+        category:         dish.category,
+        dietaries:        (dish.dietaries || []).join(','),
+        ingredients:      (dish.ingredients || []).join('\n'),
+        mise_en_place:    (dish.miseEnPlace || []).join('\n'),
+        modifications:    JSON.stringify(dish.modifications || []),
+        interesting_info: dish.interestingInfo || '',
+        sort_order:       sortOrder
+      };
+
+      const { error } = await supabaseClient.from('food_items').insert(row);
+      if (error) {
+        console.error(error);
+        alert('Error saving dish: ' + error.message);
+        return;
+      }
+
+      // Remove from pending
+      pendingDishes.splice(idx, 1);
+      savePendingToStorage();
+      await loadFood();
+    }
+
+    function editPendingDish(idx) {
+      const dish = pendingDishes[idx];
+      if (!dish) return;
+
+      // Open the editor pre-filled with pending dish data
+      const modal  = document.getElementById("editorModal");
+      const bodyEl = document.getElementById("editorBody");
+
+      document.getElementById("editorTitle").textContent = "Review Parsed Dish";
+      document.getElementById("editorHint").textContent  = "Edit as needed, then Save to approve or Cancel to keep as pending.";
+
+      editorState.id       = null; // new item
+      editorState.category = dish.category;
+      editorState._pendingIdx = idx; // track which pending dish
+
+      bodyEl.innerHTML = renderFoodEditor(dish);
+      initFoodEditor(dish);
+
+      // Pre-fill the image URL
+      document.getElementById('foodImage').value = dish.image || '';
+
+      modal.classList.add("active");
+      document.body.style.overflow = "hidden";
+    }
+
+    function deletePendingDish(idx) {
+      if (!confirm('Delete this parsed dish?')) return;
+      pendingDishes.splice(idx, 1);
+      savePendingToStorage();
+      renderGrid();
+    }
+
+    // Pending dish cleanup is handled inside saveFoodItem via editorState._pendingIdx
+
+    (async function init() { await loadFood(); })();
+  </script>
+</body>
+</html>
