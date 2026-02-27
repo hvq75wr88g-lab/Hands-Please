@@ -780,6 +780,62 @@
     .btn-danger:hover { background: rgba(217, 95, 95, 0.08); }
 
     .small-hint { font-size: 0.7rem; color: var(--text-muted); margin-top: 0.2rem; }
+ /* === Training Documents styles === */
+    .training-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    .training-doc {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 1rem 1.25rem;
+      cursor: pointer;
+      transition: transform var(--ease), box-shadow var(--ease), border-color var(--ease);
+    }
+    .training-doc:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-card);
+      border-color: var(--border-mid);
+    }
+    .training-doc-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .training-doc-name {
+      font-family: var(--font-display);
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 0.25rem;
+    }
+    .training-doc-date {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+    .training-doc-icon {
+      font-size: 1.5rem;
+      margin-right: 1rem;
+      flex-shrink: 0;
+    }
+    .training-doc-actions {
+      display: none;
+      gap: 0.4rem;
+      flex-shrink: 0;
+      margin-left: 0.75rem;
+    }
+    .admin-mode .training-doc-actions {
+      display: flex;
+    }
+    .training-doc-actions .btn {
+      font-size: 0.7rem;
+      padding: 0.3rem 0.7rem;
+    }
+    
  /* === Wine card styles === */
     .wine-meta {
       font-size: 0.78rem;
@@ -961,6 +1017,7 @@
       <button class="tab-btn" data-tab="drinks" onclick="switchTab('drinks')">Drinks</button>
       <button class="tab-btn" data-tab="special-events" onclick="switchTab('special-events')">Special Events</button>
       <button class="tab-btn" data-tab="wine" onclick="switchTab('wine')">Wine</button>
+      <button class="tab-btn" data-tab="training" onclick="switchTab('training')">Training</button>
     </div>
   </div>
 
@@ -1031,7 +1088,7 @@
   </div>
 
   <div class="admin-floating" id="adminControls">
-    <button class="admin-btn admin-btn-primary" onclick="currentTab === 'wine' ? openWineEditor(null) : openAddItem()">+ Add item</button>
+   <button class="admin-btn admin-btn-primary" onclick="currentTab === 'wine' ? openWineEditor(null) : currentTab === 'training' ? uploadTrainingDoc() : openAddItem()">+ Add item</button>
     <!-- NEW: Upload Syllabus PDF button -->
     <button class="admin-btn admin-btn-upload" onclick="triggerPdfUpload()">📄 Upload Syllabus PDF</button>
     <input type="file" id="pdfFileInput" accept=".pdf" style="display:none" onchange="handlePdfUpload(event)">
@@ -1055,6 +1112,7 @@
     let archiveView = 'active';
     let wineItems = [];
     let wineFilter = 'all';
+    let trainingDocs = [];
 
     // NEW: Pending dishes from PDF upload (not yet approved)
     let pendingDishes = [];
@@ -1142,12 +1200,19 @@
       }
       const foodFilters = document.getElementById('foodFilters');
       const wineFiltersBar = document.getElementById('wineFiltersBar');
+      const searchBar = document.querySelector('.search-bar');
       if (tab === 'wine') {
         foodFilters.style.display = 'none';
         wineFiltersBar.classList.add('show');
+        searchBar.style.display = '';
+      } else if (tab === 'training') {
+        foodFilters.style.display = 'none';
+        wineFiltersBar.classList.remove('show');
+        searchBar.style.display = 'none';
       } else {
         foodFilters.style.display = '';
         wineFiltersBar.classList.remove('show');
+        searchBar.style.display = '';
       }
       renderGrid();
     }
@@ -1205,6 +1270,12 @@
 
       if (currentTab === 'wine') {
         renderWineGrid(grid);
+        syncAdminMode();
+        return;
+      }
+
+      if (currentTab === 'training') {
+        renderTrainingGrid(grid);
         syncAdminMode();
         return;
       }
@@ -1295,7 +1366,30 @@
       grid.innerHTML = pendingHtml + approvedHtml;
       syncAdminMode();
     }
- function renderWineGrid(grid) {
+ function renderTrainingGrid(grid) {
+      if (!trainingDocs.length) {
+        grid.innerHTML = '<p style="grid-column:1/-1;text-align:center;color:var(--text-muted);padding:3rem 0;font-size:0.9rem;letter-spacing:0.05em;">No training documents uploaded.</p>';
+        return;
+      }
+      grid.innerHTML = '<div class="training-list">' + trainingDocs.map(doc => {
+        const date = new Date(doc.updatedAt);
+        const dateStr = date.toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' });
+        return `
+          <div class="training-doc" onclick="window.open('${doc.fileUrl}', '_blank')">
+            <span class="training-doc-icon">📄</span>
+            <div class="training-doc-info">
+              <div class="training-doc-name">${escapeHtml(doc.name)}</div>
+              <div class="training-doc-date">Last updated: ${dateStr}</div>
+            </div>
+            <div class="training-doc-actions">
+              <button class="btn btn-secondary" onclick="event.stopPropagation(); editTrainingDoc('${doc.id}')">Rename</button>
+              <button class="btn btn-danger" onclick="event.stopPropagation(); deleteTrainingDoc('${doc.id}')">Delete</button>
+            </div>
+          </div>
+        `;
+      }).join('') + '</div>';
+    }
+    function renderWineGrid(grid) {
       let items = [...wineItems];
 
       if (wineFilter !== 'all') {
@@ -2162,6 +2256,74 @@ async function toggleArchive(id) {
       item.archived = newVal;
       renderGrid();
     }
+     // ── Training Documents ──────────────────────────────────────
+    async function loadTraining() {
+      const { data, error } = await supabaseClient
+        .from('training_docs')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (error) { console.error('Error loading training_docs', error); return; }
+      trainingDocs = (data || []).map(row => ({
+        id: row.id,
+        name: row.name || '',
+        fileUrl: row.file_url || '',
+        updatedAt: row.updated_at || row.created_at
+      }));
+    }
+
+    async function uploadTrainingDoc() {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = '.pdf';
+      input.onchange = async () => {
+        const file = input.files[0];
+        if (!file) return;
+        const docName = prompt('Name this document:', file.name.replace('.pdf', ''));
+        if (!docName) return;
+
+        const uniqueName = `training-${crypto.randomUUID()}.pdf`;
+        const { error: uploadError } = await supabaseClient.storage
+          .from('menu-images')
+          .upload(uniqueName, file, { cacheControl: '3600', upsert: false });
+        if (uploadError) {
+          alert('Upload failed: ' + uploadError.message);
+          return;
+        }
+        const fileUrl = `${SUPABASE_URL}/storage/v1/object/public/menu-images/${uniqueName}`;
+        const { error: dbError } = await supabaseClient
+          .from('training_docs')
+          .insert({ name: docName, file_url: fileUrl });
+        if (dbError) { alert('Error saving: ' + dbError.message); return; }
+        await loadTraining();
+        renderGrid();
+      };
+      input.click();
+    }
+
+    async function editTrainingDoc(id) {
+      const doc = trainingDocs.find(d => d.id === id);
+      if (!doc) return;
+      const newName = prompt('Rename document:', doc.name);
+      if (!newName || newName === doc.name) return;
+      const { error } = await supabaseClient
+        .from('training_docs')
+        .update({ name: newName, updated_at: new Date().toISOString() })
+        .eq('id', id);
+      if (error) { alert('Error: ' + error.message); return; }
+      await loadTraining();
+      renderGrid();
+    }
+
+    async function deleteTrainingDoc(id) {
+      if (!confirm('Delete this training document?')) return;
+      const { error } = await supabaseClient
+        .from('training_docs')
+        .delete()
+        .eq('id', id);
+      if (error) { alert('Error: ' + error.message); return; }
+      await loadTraining();
+      renderGrid();
+    }
 // ── Wine editor ─────────────────────────────────────────────
     let wineEditorId = null;
 
@@ -2337,7 +2499,7 @@ async function toggleArchive(id) {
     
     // Pending dish cleanup is handled inside saveFoodItem via editorState._pendingIdx
 
-    (async function init() { await loadFood(); await loadWine(); })();
+    (async function init() { await loadFood(); await loadWine(); await loadTraining(); })();
   </script>
 </body>
 </html>
