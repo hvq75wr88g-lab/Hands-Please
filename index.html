@@ -1614,9 +1614,31 @@ if (uploadError) {
 
           const page = await pdf.getPage(i);
 
-          // Extract text
+          // Extract text - sort by y-position then x-position for proper reading order
           const textContent = await page.getTextContent();
-          const pageText = textContent.items.map(item => item.str).join('\n');
+          const sorted = textContent.items
+            .filter(item => item.str.trim())
+            .sort((a, b) => {
+              const ay = Math.round(a.transform[5]);
+              const by = Math.round(b.transform[5]);
+              if (Math.abs(ay - by) > 5) return by - ay;
+              return a.transform[4] - b.transform[4];
+            });
+          let pageLines = [];
+          let currentLineY = null;
+          let currentLine = '';
+          for (const item of sorted) {
+            const y = Math.round(item.transform[5]);
+            if (currentLineY === null || Math.abs(y - currentLineY) > 5) {
+              if (currentLine.trim()) pageLines.push(currentLine.trim());
+              currentLine = item.str;
+              currentLineY = y;
+            } else {
+              currentLine += ' ' + item.str;
+            }
+          }
+          if (currentLine.trim()) pageLines.push(currentLine.trim());
+          const pageText = pageLines.join('\n');
 
           // Skip non-dish pages
           if (pageText.includes('Common Allergy Guide') || pageText.includes('Glossary of Seasonal')) {
@@ -1766,47 +1788,50 @@ if (uploadError) {
     }
 
     async function extractDishImage(page, dishName) {
-      // Render the page to a canvas at a reasonable scale
-      const viewport = page.getViewport({ scale: 1.5 });
-      const canvas = document.createElement('canvas');
-      canvas.width = viewport.width;
-      canvas.height = viewport.height;
-      const ctx = canvas.getContext('2d');
-
-      await page.render({ canvasContext: ctx, viewport: viewport }).promise;
-
-      // The dish image is typically the 2nd image on the page
-      // It sits roughly in the left portion of the slide, below the header
-      // Header is ~81px tall at scale 1, so ~122px at 1.5x
-      // Dish image area: roughly x=0 to x=55% of width, y=15% to y=75% of height
-      const cropX = 0;
-      const cropY = Math.round(viewport.height * 0.15);
-      const cropW = Math.round(viewport.width * 0.4);
-      const cropH = Math.round(viewport.height * 0.65);
-
-      // Create a cropped canvas
-      const cropCanvas = document.createElement('canvas');
-      cropCanvas.width = cropW;
-      cropCanvas.height = cropH;
-      const cropCtx = cropCanvas.getContext('2d');
-      cropCtx.drawImage(canvas, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH);
-
-      // Convert to blob
-      const blob = await new Promise(resolve => cropCanvas.toBlob(resolve, 'image/jpeg', 0.8));
-      if (!blob) return '';
-
-      // Upload to Supabase Storage
-      const uniqueName = `pdf-${crypto.randomUUID()}.jpg`;
-      const { error: uploadError } = await supabaseClient.storage
-        .from('menu-images')
-        .upload(uniqueName, blob, { cacheControl: '3600', upsert: false });
-
-      if (uploadError) {
-        console.warn('Image upload failed:', uploadError);
+      try {
+        const ops = await page.getOperatorList();
+        const imgKeys = [];
+        for (let i = 0; i < ops.fnArray.length; i++) {
+          if (ops.fnArray[i] === pdfjsLib.OPS.paintImageXObject) {
+            imgKeys.push(ops.argsArray[i][0]);
+          }
+        }
+        if (imgKeys.length < 2) return '';
+        const imgKey = imgKeys[1];
+        const imgData = await page.objs.get(imgKey);
+        if (!imgData || !imgData.data) return '';
+        const w = imgData.width;
+        const h = imgData.height;
+        const cvs = document.createElement('canvas');
+        cvs.width = w;
+        cvs.height = h;
+        const ctx = cvs.getContext('2d');
+        const imgDataObj = ctx.createImageData(w, h);
+        if (imgData.data.length === w * h * 4) {
+          imgDataObj.data.set(imgData.data);
+        } else if (imgData.data.length === w * h * 3) {
+          for (let j = 0, k = 0; j < imgData.data.length; j += 3, k += 4) {
+            imgDataObj.data[k] = imgData.data[j];
+            imgDataObj.data[k+1] = imgData.data[j+1];
+            imgDataObj.data[k+2] = imgData.data[j+2];
+            imgDataObj.data[k+3] = 255;
+          }
+        } else {
+          return '';
+        }
+        ctx.putImageData(imgDataObj, 0, 0);
+        const blob = await new Promise(resolve => cvs.toBlob(resolve, 'image/jpeg', 0.85));
+        if (!blob) return '';
+        const uniqueName = `pdf-${crypto.randomUUID()}.jpg`;
+        const { error: uploadError } = await supabaseClient.storage
+          .from('menu-images')
+          .upload(uniqueName, blob, { cacheControl: '3600', upsert: false });
+        if (uploadError) { console.warn('Image upload failed:', uploadError); return ''; }
+        return `${SUPABASE_URL}/storage/v1/object/public/menu-images/${uniqueName}`;
+      } catch (err) {
+        console.warn('Image extraction error for', dishName, err);
         return '';
       }
-
-      return `${SUPABASE_URL}/storage/v1/object/public/menu-images/${uniqueName}`;
     }
 
     // ── Pending dish actions ────────────────────────────────────
