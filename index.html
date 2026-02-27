@@ -780,7 +780,43 @@
     .btn-danger:hover { background: rgba(217, 95, 95, 0.08); }
 
     .small-hint { font-size: 0.7rem; color: var(--text-muted); margin-top: 0.2rem; }
-
+ /* === Wine card styles === */
+    .wine-meta {
+      font-size: 0.78rem;
+      color: var(--text-sub);
+      margin-bottom: 0.4rem;
+      line-height: 1.5;
+    }
+    .wine-meta span {
+      display: inline-block;
+      margin-right: 0.5rem;
+    }
+    .wine-meta .wine-grape {
+      color: var(--gold-light);
+      font-weight: 500;
+    }
+    .wine-meta .wine-region {
+      color: var(--text-sub);
+      font-style: italic;
+    }
+    .wine-filters-bar {
+      display: none;
+    }
+    .wine-filters-bar.show {
+      display: flex;
+      gap: 0.45rem;
+      margin-bottom: 1.75rem;
+      flex-wrap: wrap;
+    }
+    .modal-map-image {
+      width: 100%;
+      max-height: 300px;
+      object-fit: contain;
+      border-radius: var(--radius-md);
+      margin-top: 1rem;
+      border: 1px solid var(--border);
+    }
+    
     /* === Special Events: Archive styles === */
     .archive-chip {
       position: absolute;
@@ -924,6 +960,7 @@
       <button class="tab-btn" data-tab="dinner" onclick="switchTab('dinner')">Dinner</button>
       <button class="tab-btn" data-tab="drinks" onclick="switchTab('drinks')">Drinks</button>
       <button class="tab-btn" data-tab="special-events" onclick="switchTab('special-events')">Special Events</button>
+      <button class="tab-btn" data-tab="wine" onclick="switchTab('wine')">Wine</button>
     </div>
   </div>
 
@@ -950,6 +987,16 @@
       <button class="filter-btn" data-filter="pork" onclick="setFoodFilter('pork')">Pork</button>
       <button class="filter-btn" data-filter="alcohol" onclick="setFoodFilter('alcohol')">Alcohol</button>
       <button class="filter-btn" data-filter="onion-garlic" onclick="setFoodFilter('onion-garlic')">Onion / Garlic</button>
+    </div>
+    <div id="wineFiltersBar" class="wine-filters-bar">
+      <button class="filter-btn active" data-wfilter="all" onclick="setWineFilter('all')">All Wines</button>
+      <button class="filter-btn" data-wfilter="red" onclick="setWineFilter('red')">Red</button>
+      <button class="filter-btn" data-wfilter="white" onclick="setWineFilter('white')">White</button>
+      <button class="filter-btn" data-wfilter="rose" onclick="setWineFilter('rose')">Rosé</button>
+      <button class="filter-btn" data-wfilter="sparkling" onclick="setWineFilter('sparkling')">Sparkling</button>
+      <button class="filter-btn" data-wfilter="dessert" onclick="setWineFilter('dessert')">Dessert</button>
+      <button class="filter-btn" data-wfilter="btg" onclick="setWineFilter('btg')">BTG</button>
+      <button class="filter-btn" data-wfilter="happy-hour" onclick="setWineFilter('happy-hour')">Happy Hour</button>
     </div>
     <div id="contentGrid" class="menu-grid"></div>
   </div>
@@ -984,7 +1031,7 @@
   </div>
 
   <div class="admin-floating" id="adminControls">
-    <button class="admin-btn admin-btn-primary" onclick="openAddItem()">+ Add dish</button>
+    <button class="admin-btn admin-btn-primary" onclick="currentTab === 'wine' ? openWineEditor(null) : openAddItem()">+ Add item</button>
     <!-- NEW: Upload Syllabus PDF button -->
     <button class="admin-btn admin-btn-upload" onclick="triggerPdfUpload()">📄 Upload Syllabus PDF</button>
     <input type="file" id="pdfFileInput" accept=".pdf" style="display:none" onchange="handlePdfUpload(event)">
@@ -1006,6 +1053,8 @@
     let editorState = { id: null, category: null };
     let dragSrcId = null;
     let archiveView = 'active';
+    let wineItems = [];
+    let wineFilter = 'all';
 
     // NEW: Pending dishes from PDF upload (not yet approved)
     let pendingDishes = [];
@@ -1091,6 +1140,15 @@
         archiveBar.classList.remove('show-for-events');
         archiveView = 'active';
       }
+      const foodFilters = document.getElementById('foodFilters');
+      const wineFiltersBar = document.getElementById('wineFiltersBar');
+      if (tab === 'wine') {
+        foodFilters.style.display = 'none';
+        wineFiltersBar.classList.add('show');
+      } else {
+        foodFilters.style.display = '';
+        wineFiltersBar.classList.remove('show');
+      }
       renderGrid();
     }
 
@@ -1102,6 +1160,34 @@
       renderGrid();
     }
 
+    function setWineFilter(filter) {
+      wineFilter = filter;
+      document.querySelectorAll('#wineFiltersBar .filter-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.wfilter === filter);
+      });
+      renderGrid();
+    }
+
+    async function loadWine() {
+      const { data, error } = await supabaseClient
+        .from('wine_items')
+        .select('*')
+        .order('sort_order', { ascending: true })
+        .order('created_at', { ascending: true });
+      if (error) { console.error('Error loading wine_items', error); return; }
+      wineItems = (data || []).map(row => ({
+        id: row.id,
+        name: row.name || '',
+        grape: row.grape || '',
+        region: row.region || '',
+        bottleImage: row.bottle_image_url || '',
+        mapImage: row.map_image_url || '',
+        tastingNotes: row.tasting_notes || '',
+        pairings: row.pairings || '',
+        filters: row.filters ? row.filters.split(',').map(s => s.trim()).filter(Boolean) : [],
+        sortOrder: row.sort_order ?? 0
+      }));
+    }
      function setArchiveView(view) {
       archiveView = view;
       document.querySelectorAll('.archive-toggle-btn').forEach(btn => {
@@ -1116,7 +1202,14 @@
 
     function renderGrid() {
       const grid = document.getElementById("contentGrid");
-       let items = foodItems.filter(d => (d.category || "breakfast") === currentTab);
+
+      if (currentTab === 'wine') {
+        renderWineGrid(grid);
+        syncAdminMode();
+        return;
+      }
+
+      let items = foodItems.filter(d => (d.category || "breakfast") === currentTab);
 
       if (currentTab === 'special-events') {
         items = items.filter(d => archiveView === 'archived' ? d.archived : !d.archived);
@@ -1202,7 +1295,57 @@
       grid.innerHTML = pendingHtml + approvedHtml;
       syncAdminMode();
     }
+ function renderWineGrid(grid) {
+      let items = [...wineItems];
 
+      if (wineFilter !== 'all') {
+        items = items.filter(w => w.filters && w.filters.includes(wineFilter));
+      }
+
+      if (searchTerm) {
+        items = items.filter(w => {
+          const haystack = [w.name, w.grape, w.region, w.tastingNotes, w.pairings].join(' ').toLowerCase();
+          return haystack.includes(searchTerm);
+        });
+      }
+
+      if (!items.length) {
+        grid.innerHTML = '<p style="grid-column:1/-1;text-align:center;color:var(--text-muted);padding:3rem 0;font-size:0.9rem;letter-spacing:0.05em;">No wines found.</p>';
+        return;
+      }
+
+      grid.innerHTML = items.map(wine => `
+        <div class="card"
+             onclick="${isAdmin ? `openWineEditor('${wine.id}')` : `openWineDetail('${wine.id}')`}"
+             draggable="${isAdmin}"
+             data-id="${wine.id}"
+             data-wineid="${wine.id}"
+             ondragstart="onWineDragStart(event)"
+             ondragover="onDragOver(event)"
+             ondrop="onWineDrop(event)"
+             ondragend="onDragEnd(event)">
+          <div class="admin-chip">
+            <span class="drag-handle" onclick="event.stopPropagation()">&#9776;</span>
+            Edit
+          </div>
+          ${wine.bottleImage
+            ? `<img src="${wine.bottleImage}" alt="${escapeHtml(wine.name)}" class="card-image" onerror="this.style.display='none'">`
+            : `<div class="card-image-placeholder">${escapeHtml(wine.name)}</div>`
+          }
+          <div class="card-content">
+            <h3 class="card-title">${escapeHtml(wine.name)}</h3>
+            <div class="wine-meta">
+              <span class="wine-grape">${escapeHtml(wine.grape)}</span>
+              <span class="wine-region">${escapeHtml(wine.region)}</span>
+            </div>
+            <div class="dietary-tags">
+              ${(wine.filters || []).map(f => `<span class="dietary-tag">${escapeHtml(f.toUpperCase())}</span>`).join('')}
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+    
     // ── Drag & drop ─────────────────────────────────────────────
     function onDragStart(e) {
       if (!isAdmin) return;
@@ -1309,7 +1452,41 @@
       modal.classList.add("active");
       document.body.style.overflow = "hidden";
     }
-
+function openWineDetail(id) {
+      const wine = wineItems.find(w => w.id === id);
+      if (!wine) return;
+      const modal = document.getElementById('detailModal');
+      const inner = document.getElementById('modalInner');
+      inner.innerHTML = `
+        ${wine.bottleImage ? `<img src="${wine.bottleImage}" alt="${escapeHtml(wine.name)}" class="modal-image" onerror="this.style.display='none'">` : ''}
+        <div class="modal-body">
+          <h2 class="modal-title">${escapeHtml(wine.name)}</h2>
+          <div class="wine-meta" style="font-size:0.95rem;margin-bottom:1.25rem;">
+            <span class="wine-grape">${escapeHtml(wine.grape)}</span>
+            <span class="wine-region">${escapeHtml(wine.region)}</span>
+          </div>
+          <div class="dietary-tags" style="margin-bottom:1.25rem;">
+            ${(wine.filters || []).map(f => `<span class="dietary-tag">${escapeHtml(f.toUpperCase())}</span>`).join('')}
+          </div>
+          ${wine.mapImage ? `
+          <div class="section">
+            <h3 class="section-title">Region Map</h3>
+            <img src="${wine.mapImage}" alt="Region map" class="modal-map-image" onerror="this.parentElement.style.display='none'">
+          </div>` : ''}
+          <div class="section">
+            <h3 class="section-title">Tasting Notes</h3>
+            <div class="info-box">${escapeHtml(wine.tastingNotes)}</div>
+          </div>
+          <div class="section">
+            <h3 class="section-title">Pairing Suggestions</h3>
+            <div class="section-content"><p>${escapeHtml(wine.pairings)}</p></div>
+          </div>
+        </div>
+      `;
+      modal.classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
+    
     function closeDetailModal() {
       document.getElementById("detailModal").classList.remove("active");
       document.body.style.overflow = "auto";
@@ -1985,10 +2162,182 @@ async function toggleArchive(id) {
       item.archived = newVal;
       renderGrid();
     }
+// ── Wine editor ─────────────────────────────────────────────
+    let wineEditorId = null;
+
+    function openWineEditor(id) {
+      const isNew = !id;
+      const modal = document.getElementById('editorModal');
+      const bodyEl = document.getElementById('editorBody');
+      document.getElementById('editorTitle').textContent = isNew ? 'Add Wine' : 'Edit Wine';
+      document.getElementById('editorHint').textContent = 'Saved to Supabase.';
+
+      const wine = isNew ? { name:'', grape:'', region:'', bottleImage:'', mapImage:'', tastingNotes:'', pairings:'', filters:[] } : structuredClone(wineItems.find(w => w.id === id));
+      wineEditorId = isNew ? null : wine.id;
+
+      const filterOptions = ['red','white','rose','sparkling','dessert','btg','happy-hour'];
+      const filterLabels = { red:'Red', white:'White', rose:'Rosé', sparkling:'Sparkling', dessert:'Dessert', btg:'BTG', 'happy-hour':'Happy Hour' };
+
+      bodyEl.innerHTML = `
+        <div class="editor-grid">
+          <div>
+            <div class="form-group">
+              <label>Wine Name</label>
+              <input type="text" id="wineName" value="${escapeHtml(wine.name)}">
+            </div>
+            <div class="form-group">
+              <label>Grape Variety</label>
+              <input type="text" id="wineGrape" value="${escapeHtml(wine.grape)}">
+            </div>
+            <div class="form-group">
+              <label>Region</label>
+              <input type="text" id="wineRegion" value="${escapeHtml(wine.region)}">
+            </div>
+            <div class="form-group">
+              <label>Bottle Photo</label>
+              <input type="text" id="wineBottleImage" value="${escapeHtml(wine.bottleImage)}" placeholder="Paste URL or upload below">
+              <input type="file" id="wineBottleFile" accept="image/*" style="margin-top:0.35rem;">
+            </div>
+            <div class="form-group">
+              <label>Region Map</label>
+              <input type="text" id="wineMapImage" value="${escapeHtml(wine.mapImage)}" placeholder="Paste URL or upload below (optional)">
+              <input type="file" id="wineMapFile" accept="image/*" style="margin-top:0.35rem;">
+            </div>
+          </div>
+          <div>
+            <div class="form-group">
+              <label>Tasting Notes</label>
+              <textarea id="wineTasting" style="min-height:120px;">${escapeHtml(wine.tastingNotes)}</textarea>
+            </div>
+            <div class="form-group">
+              <label>Pairing Suggestions</label>
+              <textarea id="winePairings" style="min-height:120px;">${escapeHtml(wine.pairings)}</textarea>
+            </div>
+            <div class="form-group">
+              <label>Wine Type / Filters</label>
+              <div class="checkbox-row">
+                ${filterOptions.map(f => `
+                  <label>
+                    <input type="checkbox" class="wineFilterCb" value="${f}" ${wine.filters && wine.filters.includes(f) ? 'checked' : ''}>
+                    ${filterLabels[f]}
+                  </label>
+                `).join('')}
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="editor-actions">
+          <div>
+            <button class="btn btn-primary" onclick="saveWineItem()">Save</button>
+            <button class="btn btn-secondary" onclick="closeEditor()">Cancel</button>
+          </div>
+          <div>
+            ${wineEditorId ? '<button class="btn btn-danger" onclick="deleteWineItem()">Delete wine</button>' : ''}
+          </div>
+        </div>
+      `;
+      modal.classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
+
+    async function uploadWineImage(fileInput, urlInput) {
+      const file = fileInput.files && fileInput.files[0];
+      if (!file) return urlInput.value.trim();
+      const fileExt = file.name.split('.').pop();
+      const uniqueName = `wine-${crypto.randomUUID()}.${fileExt}`;
+      const { error } = await supabaseClient.storage
+        .from('menu-images')
+        .upload(uniqueName, file, { cacheControl: '3600', upsert: false });
+      if (error) { alert('Image upload failed: ' + error.message); return null; }
+      return `${SUPABASE_URL}/storage/v1/object/public/menu-images/${uniqueName}`;
+    }
+
+    async function saveWineItem() {
+      const name = document.getElementById('wineName').value.trim();
+      if (!name) { alert('Wine name is required'); return; }
+
+      const bottleUrl = await uploadWineImage(
+        document.getElementById('wineBottleFile'),
+        document.getElementById('wineBottleImage')
+      );
+      if (bottleUrl === null) return;
+
+      const mapUrl = await uploadWineImage(
+        document.getElementById('wineMapFile'),
+        document.getElementById('wineMapImage')
+      );
+      if (mapUrl === null) return;
+
+      const filters = Array.from(document.querySelectorAll('.wineFilterCb:checked')).map(cb => cb.value);
+
+      let sortOrder = 0;
+      if (!wineEditorId) {
+        sortOrder = wineItems.length > 0 ? Math.max(...wineItems.map(w => w.sortOrder)) + 1 : 0;
+      }
+
+      const row = {
+        name,
+        grape: document.getElementById('wineGrape').value.trim(),
+        region: document.getElementById('wineRegion').value.trim(),
+        bottle_image_url: bottleUrl || null,
+        map_image_url: mapUrl || null,
+        tasting_notes: document.getElementById('wineTasting').value.trim(),
+        pairings: document.getElementById('winePairings').value.trim(),
+        filters: filters.join(','),
+        ...(!wineEditorId ? { sort_order: sortOrder } : {})
+      };
+
+      let error;
+      if (wineEditorId) {
+        ({ error } = await supabaseClient.from('wine_items').update(row).eq('id', wineEditorId));
+      } else {
+        ({ error } = await supabaseClient.from('wine_items').insert(row));
+      }
+      if (error) { alert('Error saving wine: ' + error.message); return; }
+      closeEditor();
+      await loadWine();
+      renderGrid();
+    }
+
+    async function deleteWineItem() {
+      if (!wineEditorId || !confirm('Delete this wine?')) return;
+      const { error } = await supabaseClient.from('wine_items').delete().eq('id', wineEditorId);
+      if (error) { alert('Error deleting: ' + error.message); return; }
+      closeEditor();
+      await loadWine();
+      renderGrid();
+    }
+
+    // ── Wine drag & drop ────────────────────────────────────────
+    let wineDragSrcId = null;
+
+    function onWineDragStart(e) {
+      if (!isAdmin) return;
+      wineDragSrcId = e.currentTarget.dataset.wineid;
+      e.currentTarget.style.opacity = '0.45';
+      e.dataTransfer.effectAllowed = 'move';
+    }
+
+    async function onWineDrop(e) {
+      e.preventDefault();
+      const dropId = e.currentTarget.dataset.wineid;
+      e.currentTarget.style.outline = '';
+      if (!wineDragSrcId || wineDragSrcId === dropId) return;
+      const srcIdx = wineItems.findIndex(w => w.id === wineDragSrcId);
+      const destIdx = wineItems.findIndex(w => w.id === dropId);
+      if (srcIdx === -1 || destIdx === -1) return;
+      const [moved] = wineItems.splice(srcIdx, 1);
+      wineItems.splice(destIdx, 0, moved);
+      wineItems.forEach((w, i) => { w.sortOrder = i; });
+      renderGrid();
+      await Promise.all(wineItems.map(w =>
+        supabaseClient.from('wine_items').update({ sort_order: w.sortOrder }).eq('id', w.id)
+      ));
+    }
     
     // Pending dish cleanup is handled inside saveFoodItem via editorState._pendingIdx
 
-    (async function init() { await loadFood(); })();
+    (async function init() { await loadFood(); await loadWine(); })();
   </script>
 </body>
 </html>
